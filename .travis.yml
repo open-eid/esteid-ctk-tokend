@@ -1,0 +1,3 @@
+language: objective-c
+osx_image: xcode8.3
+script: xcodebuild -project EstEIDTokenApp.xcodeproj build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
