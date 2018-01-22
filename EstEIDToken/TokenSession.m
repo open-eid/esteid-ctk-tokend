@@ -105,7 +105,9 @@
     switch (operation) {
         case TKTokenOperationSignData:
             supports = keyItem.canSign && (
+#if ENABLE_RSA
                 [algorithm isAlgorithm:kSecKeyAlgorithmRSASignatureRaw] ||
+#endif
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureRFC4754] ||
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962] ||
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA1] ||
@@ -115,7 +117,9 @@
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA512]);
             break;
         case TKTokenOperationDecryptData:
+#if ENABLE_RSA
             //supports = keyItem.canDecrypt && [algorithm isAlgorithm:kSecKeyAlgorithmRSAEncryptionRaw]; // FIXME: implement encryption
+#endif
             break;
         case TKTokenOperationPerformKeyExchange:
             //supports = keyItem.canPerformKeyExchange && [algorithm isAlgorithm:kSecKeyAlgorithmECDHKeyExchangeStandard]; // FIXME: implement derive
@@ -169,6 +173,7 @@
     }
 
     NSData *sign = dataToSign;
+#if ENABLE_RSA
     if ([algorithm isAlgorithm:kSecKeyAlgorithmRSASignatureRaw]) {
         NSLog(@"EstEIDToken Remove PKCS1 1.5 padding");
         //  00 01 FF FF 00 ....
@@ -177,6 +182,7 @@
         NSUInteger pos = (NSUInteger)(e - string) + 1;
         sign = [dataToSign subdataWithRange:NSMakeRange(pos, dataToSign.length - pos)];
     }
+#endif
 
     self.smartCard.useExtendedLength = NO;
     NSData *response = [self.smartCard sendIns:0x88 p1:0x00 p2:0x00 data:sign le:@0 sw:&sw error:error];

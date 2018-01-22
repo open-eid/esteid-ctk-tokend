@@ -433,6 +433,8 @@
 				CODE_SIGN_ENTITLEMENTS = EstEIDToken/EstEIDToken.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 4F425HHPH8;
+				ENABLE_RSA = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "ENABLE_RSA=$(ENABLE_RSA)";
 				INFOPLIST_FILE = EstEIDToken/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp.EstEIDToken;
@@ -447,6 +449,8 @@
 				CODE_SIGN_ENTITLEMENTS = EstEIDToken/EstEIDToken.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = 4F425HHPH8;
+				ENABLE_RSA = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "ENABLE_RSA=$(ENABLE_RSA)";
 				INFOPLIST_FILE = EstEIDToken/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp.EstEIDToken;
