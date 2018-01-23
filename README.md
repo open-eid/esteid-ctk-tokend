@@ -29,6 +29,26 @@
         Execute blank "EstEIDTokenApp.app" application and it registers the extension.
         Open Safari and use site with client certificate requirement.
 
+ 5. Debug
+
+        Open Console.app and filter EstEID logs
+        Load extension
+        pluginkit -a EstEIDTokenApp.app/Contents/PlugIns/EstEIDToken.appex
+        Unload extension
+        pluginkit -r EstEIDTokenApp.app/Contents/PlugIns/EstEIDToken.appex
+        List cards
+        security list-smartcard
+        List card parameters
+        security export-smartcard
+        Kill daemon
+        ps aux |grep EstEIDToken.appex
+        kill -9 PID
+
+## References
+* Apple example code https://developer.apple.com/library/content/samplecode/PIVToken/Introduction/Intro.html
+* Belgium implementation https://github.com/Fedict/eid-mw/tree/master/cardcomm/ctkToken
+* OpenSC implementation https://github.com/frankmorgner/OpenSCToken
+
 ## Support
 Official builds are provided through official distribution point [installer.id.ee](https://installer.id.ee). If you want support, you need to be using official builds. Contact for assistance by email [abi@id.ee](mailto:abi@id.ee) or [www.id.ee](http://www.id.ee).
 
