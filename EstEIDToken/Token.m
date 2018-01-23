@@ -113,6 +113,16 @@
         }
         return NO;
     }
+#if ENABLE_RSA == 0
+    SecKeyRef pubKey;
+    SecCertificateCopyPublicKey((__bridge SecCertificateRef)certificate, &pubKey);
+    NSDictionary *attributes = CFBridgingRelease(SecKeyCopyAttributes(pubKey));
+    CFRelease(pubKey);
+    if ([attributes[(__bridge NSString*)kSecAttrKeyType] caseInsensitiveCompare:(__bridge NSString*)kSecAttrKeyTypeRSA] == NSOrderedSame) {
+        NSLog(@"EstEIDToken populateIdentityFromSmartCard: RSA support is disabled");
+        return NO;
+    }
+#endif
     TKTokenKeychainCertificate *certificateItem = [[TKTokenKeychainCertificate alloc] initWithCertificate:(__bridge SecCertificateRef)certificate objectID:certificateID];
     if (certificateItem == nil) {
         return NO;
