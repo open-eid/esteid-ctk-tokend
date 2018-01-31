@@ -3,8 +3,23 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 48;
 	objects = {
+
+/* Begin PBXAggregateTarget section */
+		4E5814F920225F53008493DC /* package */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 4E5814FA20225F53008493DC /* Build configuration list for PBXAggregateTarget "package" */;
+			buildPhases = (
+				4E5814FF20225FA6008493DC /* ShellScript */,
+			);
+			dependencies = (
+				4E5814FE20225F7F008493DC /* PBXTargetDependency */,
+			);
+			name = package;
+			productName = package;
+		};
+/* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
 		2F38839D1CF46C6E00F114A7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F38839C1CF46C6E00F114A7 /* AppDelegate.m */; };
@@ -25,6 +40,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 2F3883AF1CF46C9D00F114A7;
 			remoteInfo = EstEIDToken;
+		};
+		4E5814FD20225F7F008493DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2F3883901CF46C6E00F114A7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2F3883971CF46C6E00F114A7;
+			remoteInfo = EstEIDTokenApp;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -193,7 +215,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0910;
-				ORGANIZATIONNAME = "Libor sykora";
+				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					2F3883971CF46C6E00F114A7 = {
 						CreatedOnToolsVersion = 8.0;
@@ -205,10 +227,14 @@
 						DevelopmentTeam = 4F425HHPH8;
 						ProvisioningStyle = Manual;
 					};
+					4E5814F920225F53008493DC = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 2F3883931CF46C6E00F114A7 /* Build configuration list for PBXProject "EstEIDTokenApp" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -222,6 +248,7 @@
 			targets = (
 				2F3883971CF46C6E00F114A7 /* EstEIDTokenApp */,
 				2F3883AF1CF46C9D00F114A7 /* EstEIDToken */,
+				4E5814F920225F53008493DC /* package */,
 			);
 		};
 /* End PBXProject section */
@@ -246,6 +273,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4E5814FF20225FA6008493DC /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"${CODE_SIGNING_REQUIRED}\" == \"NO\" ]; then\n  pkgbuild --root ${DSTROOT} --install-location / esteid-ctk-tokend_${VERSION}.${BUILD_NUMBER}.pkg\nelse\npkgbuild --sign \"${DEVELOPMENT_TEAM}\" --root ${DSTROOT} --install-location / esteid-ctk-tokend_${VERSION}.${BUILD_NUMBER}.pkg\nfi";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2F3883941CF46C6E00F114A7 /* Sources */ = {
@@ -273,6 +317,11 @@
 			isa = PBXTargetDependency;
 			target = 2F3883AF1CF46C9D00F114A7 /* EstEIDToken */;
 			targetProxy = 2F3883BD1CF46C9D00F114A7 /* PBXContainerItemProxy */;
+		};
+		4E5814FE20225F7F008493DC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2F3883971CF46C6E00F114A7 /* EstEIDTokenApp */;
+			targetProxy = 4E5814FD20225F7F008493DC /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -308,6 +357,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUILD_NUMBER = 0;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -333,6 +383,7 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 4F425HHPH8;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -352,6 +403,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				VERSION = 1.0.0;
 			};
 			name = Debug;
 		};
@@ -359,6 +411,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUILD_NUMBER = 0;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -384,6 +437,7 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 4F425HHPH8;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -396,6 +450,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				SDKROOT = macosx;
+				VERSION = 1.0.0;
 			};
 			name = Release;
 		};
@@ -403,10 +458,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4F425HHPH8;
 				INFOPLIST_FILE = EstEIDTokenApp/Info.plist;
+				INSTALL_PATH = "$(LOCAL_APPS_DIR)/Utilities";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -417,10 +471,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4F425HHPH8;
 				INFOPLIST_FILE = EstEIDTokenApp/Info.plist;
+				INSTALL_PATH = "$(LOCAL_APPS_DIR)/Utilities";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -432,7 +485,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EstEIDToken/EstEIDToken.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4F425HHPH8;
 				ENABLE_RSA = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "ENABLE_RSA=$(ENABLE_RSA)";
 				INFOPLIST_FILE = EstEIDToken/Info.plist;
@@ -448,7 +500,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EstEIDToken/EstEIDToken.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 4F425HHPH8;
 				ENABLE_RSA = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "ENABLE_RSA=$(ENABLE_RSA)";
 				INFOPLIST_FILE = EstEIDToken/Info.plist;
@@ -456,6 +507,20 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp.EstEIDToken;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		4E5814FB20225F53008493DC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		4E5814FC20225F53008493DC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -485,6 +550,15 @@
 			buildConfigurations = (
 				2F3883C11CF46C9D00F114A7 /* Debug */,
 				2F3883C21CF46C9D00F114A7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4E5814FA20225F53008493DC /* Build configuration list for PBXAggregateTarget "package" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4E5814FB20225F53008493DC /* Debug */,
+				4E5814FC20225F53008493DC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
