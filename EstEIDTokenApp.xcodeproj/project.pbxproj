@@ -286,7 +286,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${CODE_SIGNING_REQUIRED}\" == \"NO\" ]; then\n  pkgbuild --root ${DSTROOT} --install-location / esteid-ctk-tokend_${VERSION}.${BUILD_NUMBER}.pkg\nelse\npkgbuild --sign \"${DEVELOPMENT_TEAM}\" --root ${DSTROOT} --install-location / esteid-ctk-tokend_${VERSION}.${BUILD_NUMBER}.pkg\nfi";
+			shellScript = "if [ \"${CODE_SIGNING_REQUIRED}\" != \"NO\" ]; then\n  SIGN=(--sign \"${DEVELOPMENT_TEAM}\")\nfi\npkgbuild --root ${DSTROOT} --install-location / --identifier ee.ria.esteid-ctk-tokend --version ${VERSION}.${BUILD_NUMBER} \"${SIGN[@]}\" esteid-ctk-tokend_${VERSION}.${BUILD_NUMBER}.pkg\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
