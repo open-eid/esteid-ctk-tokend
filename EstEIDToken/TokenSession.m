@@ -23,6 +23,17 @@
 
 @implementation EstEIDAuthOperation
 
+- (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard {
+    if (self = [super init]) {
+        self.smartCard = smartCard;
+        self.APDUTemplate = [NSData dataWithBytes:(const UInt8[]){self.smartCard.cla, 0x20, 0x00, 0x01, 0x00} length:5];
+        self.PINByteOffset = 5;
+        self.PINFormat.maxPINLength = 12;
+        self.PINFormat.PINBlockByteLength = 0;
+    }
+    return self;
+}
+
 - (BOOL)finishWithError:(NSError **)error {
     NSLog(@"EstEIDAuthOperation finishWithError %@", *error);
 
@@ -76,15 +87,15 @@
 @implementation EstEIDTokenSession
 
 - (TKTokenAuthOperation *)tokenSession:(TKTokenSession *)session beginAuthForOperation:(TKTokenOperation)operation constraint:(TKTokenOperationConstraint)constraint error:(NSError **)error {
-    NSLog(@"EstEIDTokenSession beginAuthForOperation");
+    NSLog(@"EstEIDTokenSession beginAuthForOperation %@ constraint %@", @(operation), constraint);
     if ([constraint isEqual:EstEIDConstraintPIN]) {
-        EstEIDAuthOperation *auth = [[EstEIDAuthOperation alloc] init];
-        auth.smartCard = self.smartCard;
-        auth.APDUTemplate = [NSData dataWithBytes:(const UInt8[]){self.smartCard.cla, 0x20, 0x00, 0x01, 0x00} length:5];
-        auth.PINByteOffset = 5;
-        auth.PINFormat.maxPINLength = 12;
-        auth.PINFormat.PINBlockByteLength = 0;
-        return auth;
+        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+        [self.smartCard beginSessionWithReply:^(BOOL success, NSError *error) {
+            NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply %@ %@", @(success), error);
+            dispatch_semaphore_signal(sem);
+        }];
+        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+        return [[EstEIDAuthOperation alloc] initWithSmartCard:self.smartCard];
     }
     NSLog(@"EstEIDTokenSession beginAuthForOperation attempt to evaluate unsupported constraint %@", constraint);
     if (error != nil) {
@@ -117,9 +128,7 @@
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA512]);
             break;
         case TKTokenOperationDecryptData:
-#if ENABLE_RSA
             //supports = keyItem.canDecrypt && [algorithm isAlgorithm:kSecKeyAlgorithmRSAEncryptionRaw]; // FIXME: implement encryption
-#endif
             break;
         case TKTokenOperationPerformKeyExchange:
             //supports = keyItem.canPerformKeyExchange && [algorithm isAlgorithm:kSecKeyAlgorithmECDHKeyExchangeStandard]; // FIXME: implement derive
@@ -152,8 +161,6 @@
     }
 
     UInt16 sw;
-    NSData *DEFAULT = [NSData dataWithBytes:(const UInt8[]){ 0x83, 0x00 } length:2]; //Key reference, 8303801100
-
     [self.smartCard sendIns:0x22 p1:0xF3 p2:0x01 data:nil le:@0 sw:&sw error:error];
     if (sw != 0x9000) {
         NSLog(@"EstEIDTokenSession signData failed to set sec env");
@@ -163,6 +170,7 @@
         return nil;
     }
 
+    NSData *DEFAULT = [NSData dataWithBytes:(const UInt8[]){ 0x83, 0x00 } length:2]; //Key reference, 8303801100
     [self.smartCard sendIns:0x22 p1:0x41 p2:0xB8 data:DEFAULT le:nil sw:&sw error:error];
     if (sw != 0x9000) {
         NSLog(@"EstEIDTokenSession signData failed to select default key");
@@ -193,6 +201,7 @@
 
     self.smartCard.sensitive = NO;
     self.smartCard.context = nil;
+    [self.smartCard endSession];
     if ([algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962] ||
         [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA1] ||
         [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA224] ||
@@ -214,11 +223,10 @@
         };
 
         uint8 *bytes = (uint8*)response.bytes;
-        ECDSA ecdsa;
-        ecdsa.r.Length = response.length / 2;
-        ecdsa.r.Data = bytes;
-        ecdsa.s.Length = response.length / 2;
-        ecdsa.s.Data = &bytes[response.length / 2];
+        ECDSA ecdsa = {
+            { response.length / 2, bytes },
+            { response.length / 2, &bytes[response.length / 2] },
+        };
 
         SecAsn1CoderRef coder;
         SecAsn1CoderCreate(&coder);
