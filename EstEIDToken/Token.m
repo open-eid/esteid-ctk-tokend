@@ -113,22 +113,12 @@
         }
         return NO;
     }
-#if ENABLE_RSA == 0
-    SecKeyRef pubKey;
-    SecCertificateCopyPublicKey((__bridge SecCertificateRef)certificate, &pubKey);
-    NSDictionary *attributes = CFBridgingRelease(SecKeyCopyAttributes(pubKey));
-    CFRelease(pubKey);
-    if ([attributes[(__bridge NSString*)kSecAttrKeyType] caseInsensitiveCompare:(__bridge NSString*)kSecAttrKeyTypeRSA] == NSOrderedSame) {
-        NSLog(@"EstEIDToken populateIdentityFromSmartCard: RSA support is disabled");
-        return NO;
-    }
-#endif
+
     TKTokenKeychainCertificate *certificateItem = [[TKTokenKeychainCertificate alloc] initWithCertificate:(__bridge SecCertificateRef)certificate objectID:certificateID];
     if (certificateItem == nil) {
         return NO;
     }
     [certificateItem setName:certificateName];
-    [items addObject:certificateItem];
 
     // Create key item.
     TKTokenKeychainKey *keyItem = [[TKTokenKeychainKey alloc] initWithCertificate:(__bridge SecCertificateRef)certificate objectID:keyID];
@@ -136,6 +126,13 @@
         return NO;
     }
     [keyItem setName:keyName];
+
+#if ENABLE_RSA == 0
+    if ([keyItem.keyType isEqual:(id)kSecAttrKeyTypeRSA]) {
+        NSLog(@"EstEIDToken populateIdentityFromSmartCard: RSA support is disabled");
+        return NO;
+    }
+#endif
 
     keyItem.canSign = YES;
     keyItem.canDecrypt = NO; //auth; FIXME: implement encryption
@@ -147,6 +144,8 @@
         constraints[@(TKTokenOperationDecryptData)] = EstEIDConstraintPIN;
     }
     keyItem.constraints = constraints;
+
+    [items addObject:certificateItem];
     [items addObject:keyItem];
     return YES;
 }
@@ -173,7 +172,7 @@
 
     if (self = [super initWithSmartCard:smartCard AID:AID instanceID:instanceID tokenDriver:tokenDriver]) {
         // Prepare array with keychain items representing on card objects.
-        NSMutableArray<TKTokenKeychainItem *> *items = [NSMutableArray arrayWithCapacity:4];
+        NSMutableArray<TKTokenKeychainItem *> *items = [NSMutableArray arrayWithCapacity:2];
         if (![self populateIdentity:items
                       certificateID:@(0xAACE) name:NSLocalizedString(@"AUTH_CERT", nil) certData:auth
                               keyID:@(0x1100) name:NSLocalizedString(@"AUTH_KEY", nil) auth:YES error:error]/* ||

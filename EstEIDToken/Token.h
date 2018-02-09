@@ -17,7 +17,6 @@
  *
  */
 
-#import <Foundation/Foundation.h>
 #import <CryptoTokenKit/CryptoTokenKit.h>
 #import <CryptoTokenKit/TKSmartCardToken.h>
 
