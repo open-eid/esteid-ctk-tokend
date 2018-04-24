@@ -17,10 +17,9 @@
  *
  */
 
-#import "AppDelegate.h"
+#import <Cocoa/Cocoa.h>
 
-@interface AppDelegate ()
-
+@interface AppDelegate : NSObject <NSApplicationDelegate>
 @property (weak) IBOutlet NSWindow *window;
 @end
 

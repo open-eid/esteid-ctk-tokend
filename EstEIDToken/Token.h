@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark EstEID implementation of TKToken classes
 
+#define NSDATA(LEN, ...) [NSData dataWithBytes:(const UInt8[]){__VA_ARGS__} length:LEN]
+
 static const TKTokenOperationConstraint EstEIDConstraintPIN = @"PIN";
 
 @interface EstEIDTokenDriver : TKSmartCardTokenDriver<TKSmartCardTokenDriverDelegate>
