@@ -26,7 +26,7 @@
 - (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard {
     if (self = [super init]) {
         self.smartCard = smartCard;
-        self.APDUTemplate = [NSData dataWithBytes:(const UInt8[]){self.smartCard.cla, 0x20, 0x00, 0x01, 0x00} length:5];
+        self.APDUTemplate = NSDATA(5, self.smartCard.cla, 0x20, 0x00, 0x01, 0x00);
         self.PINByteOffset = 5;
         self.PINFormat.maxPINLength = 12;
         self.PINFormat.PINBlockByteLength = 0;
@@ -36,24 +36,7 @@
 
 - (BOOL)finishWithError:(NSError **)error {
     NSLog(@"EstEIDAuthOperation finishWithError %@", *error);
-
     UInt16 sw = 0;
-#if 0
-    TKSmartCardUserInteractionForSecurePINVerification *pinpad = [self.smartCard userInteractionForSecurePINVerificationWithPINFormat:self.PINFormat APDU:self.APDUTemplate PINByteOffset:self.PINByteOffset];
-
-    if (pinpad != nil) {
-        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-        pinpad.initialTimeout = 30;
-        pinpad.interactionTimeout = 30;
-        [pinpad runWithReply:^(BOOL success, NSError *error) {
-            NSLog(@"EstEIDAuthOperation finishWithError %@ %@", @(success), error);
-            dispatch_semaphore_signal(sem);
-        }];
-        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-        sw = pinpad.resultSW;
-    }
-    else
-#endif
     [self.smartCard sendIns:0x20 p1:0x00 p2:0x01 data:[self.PIN dataUsingEncoding:NSUTF8StringEncoding] le:nil sw:&sw error:error];
     NSLog(@"EstEIDAuthOperation finishWithError %@", *error);
     if ((sw & 0xff00) == 0x6300) {
@@ -72,13 +55,8 @@
         }
         return NO;
     }
-
-    // Mark card session sensitive, because we entered PIN into it and no session should access it in this state.
     self.smartCard.sensitive = YES;
-
-    // Remember in card context that the card is authenticated.
     self.smartCard.context = @(YES);
-
     return YES;
 }
 
@@ -88,20 +66,50 @@
 
 - (TKTokenAuthOperation *)tokenSession:(TKTokenSession *)session beginAuthForOperation:(TKTokenOperation)operation constraint:(TKTokenOperationConstraint)constraint error:(NSError **)error {
     NSLog(@"EstEIDTokenSession beginAuthForOperation %@ constraint %@", @(operation), constraint);
-    if ([constraint isEqual:EstEIDConstraintPIN]) {
+    if (![constraint isEqual:EstEIDConstraintPIN]) {
+        NSLog(@"EstEIDTokenSession beginAuthForOperation attempt to evaluate unsupported constraint %@", constraint);
+        if (error != nil) {
+            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeBadParameter userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"WRONG_CONSTR", nil)}];
+        }
+        return nil;
+    }
+
+    // Begin session to avoid deauth before sign operation
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+    [self.smartCard beginSessionWithReply:^(BOOL success, NSError *error) {
+        NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply %@ %@", @(success), error);
+        dispatch_semaphore_signal(sem);
+    }];
+    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+
+    TKTokenSmartCardPINAuthOperation *tokenAuth = [[EstEIDAuthOperation alloc] initWithSmartCard:self.smartCard];
+
+    // workaround: macOS does not support PINPad templates
+    TKSmartCardUserInteractionForSecurePINVerification *pinpad = [self.smartCard userInteractionForSecurePINVerificationWithPINFormat:tokenAuth.PINFormat APDU:tokenAuth.APDUTemplate PINByteOffset:tokenAuth.PINByteOffset];
+    if (pinpad != nil) {
+        NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad");
+        pinpad.PINMessageIndices = @[@0];
         dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-        [self.smartCard beginSessionWithReply:^(BOOL success, NSError *error) {
-            NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply %@ %@", @(success), error);
+        [pinpad runWithReply:^(BOOL success, NSError *error) {
+            NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed %@ %@ %04X", @(success), error, pinpad.resultSW);
+            switch (pinpad.resultSW)
+            {
+                case 0x9000:
+                    self.smartCard.sensitive = YES;
+                    self.smartCard.context = @(YES);
+                    break;
+                default:
+                    self.smartCard.sensitive = NO;
+                    self.smartCard.context = nil;
+                    break;
+            }
             dispatch_semaphore_signal(sem);
         }];
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-        return [[EstEIDAuthOperation alloc] initWithSmartCard:self.smartCard];
+        NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed");
+        return [[TKTokenAuthOperation alloc] init];
     }
-    NSLog(@"EstEIDTokenSession beginAuthForOperation attempt to evaluate unsupported constraint %@", constraint);
-    if (error != nil) {
-        *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeBadParameter userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"WRONG_CONSTR", nil)}];
-    }
-    return nil;
+    return tokenAuth;
 }
 
 - (BOOL)tokenSession:(TKTokenSession *)session supportsOperation:(TKTokenOperation)operation usingKey:(TKTokenObjectID)keyObjectID algorithm:(TKTokenKeyAlgorithm *)algorithm {
@@ -128,7 +136,7 @@
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA512]);
             break;
         case TKTokenOperationDecryptData:
-            //supports = keyItem.canDecrypt && [algorithm isAlgorithm:kSecKeyAlgorithmRSAEncryptionRaw]; // FIXME: implement encryption
+            //supports = keyItem.canDecrypt && [algorithm isAlgorithm:kSecKeyAlgorithmRSAEncryptionRaw]; // FIXME: implement decryption
             break;
         case TKTokenOperationPerformKeyExchange:
             //supports = keyItem.canPerformKeyExchange && [algorithm isAlgorithm:kSecKeyAlgorithmECDHKeyExchangeStandard]; // FIXME: implement derive
@@ -170,8 +178,7 @@
         return nil;
     }
 
-    NSData *DEFAULT = [NSData dataWithBytes:(const UInt8[]){ 0x83, 0x00 } length:2]; //Key reference, 8303801100
-    [self.smartCard sendIns:0x22 p1:0x41 p2:0xB8 data:DEFAULT le:nil sw:&sw error:error];
+    [self.smartCard sendIns:0x22 p1:0x41 p2:0xB8 data:NSDATA(2, 0x83, 0x00) le:nil sw:&sw error:error]; //Key reference, 8303801100
     if (sw != 0x9000) {
         NSLog(@"EstEIDTokenSession signData failed to select default key");
         if (error != nil) {
@@ -199,9 +206,11 @@
         return nil;
     }
 
+    // Deauth and release session
     self.smartCard.sensitive = NO;
     self.smartCard.context = nil;
     [self.smartCard endSession];
+
     if ([algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962] ||
         [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA1] ||
         [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA224] ||
@@ -241,14 +250,12 @@
 
 - (NSData *)tokenSession:(TKTokenSession *)session decryptData:(NSData *)ciphertext usingKey:(TKTokenObjectID)keyObjectID algorithm:(TKTokenKeyAlgorithm *)algorithm error:(NSError **)error {
     NSLog(@"EstEIDTokenSession decryptData %@", keyObjectID);
-    // FIXME: implement decrypt
-    return [self tokenSession:session signData:ciphertext usingKey:keyObjectID algorithm:algorithm error:error];
+    return nil; // FIXME: implement decrypt
 }
 
 - (NSData *)tokenSession:(TKTokenSession *)session performKeyExchangeWithPublicKey:(NSData *)otherPartyPublicKeyData usingKey:(TKTokenObjectID)keyObjectID algorithm:(TKTokenKeyAlgorithm *)algorithm parameters:(TKTokenKeyExchangeParameters *)parameters error:(NSError **)error {
     NSLog(@"EstEIDTokenSession performKeyExchangeWithPublicKey %@", keyObjectID);
-    // FIXME: implement derive
-    return [self tokenSession:session signData:otherPartyPublicKeyData usingKey:keyObjectID algorithm:algorithm error:error];
+    return nil; // FIXME: implement derive
 }
 
 @end

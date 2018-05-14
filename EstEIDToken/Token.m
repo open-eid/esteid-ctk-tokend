@@ -35,7 +35,7 @@
 }
 
 - (nullable NSData*)readFile:(NSData*)file error:(NSError **) error {
-    NSData *data = [self selectFile:0xA4 p1:0x02 p2:0x00 file:file error:error];
+    NSData *data = [self selectFile:0xA4 p1:0x02 p2:0x04 file:file error:error];
     if (data == nil) {
         return nil;
     }
@@ -54,7 +54,6 @@
         }
     }
 
-    self.useExtendedLength = YES;
     NSMutableData *fileData = [[NSMutableData alloc] init];
     while (fileData.length < length) {
         UInt16 sw = 0;
@@ -67,10 +66,8 @@
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeObjectNotFound userInfo:nil];
         }
-        self.useExtendedLength = NO;
         return nil;
     }
-    self.useExtendedLength = NO;
     return fileData;
 }
 
@@ -103,17 +100,21 @@
 
 @implementation EstEIDToken
 
-- (BOOL)populateIdentity:(NSMutableArray<TKTokenKeychainItem *> *)items certificateID:(TKTokenObjectID)certificateID name:(NSString *)certificateName certData:(NSData *)certificateData keyID:(TKTokenObjectID)keyID name:(NSString *)keyName auth:(BOOL)auth error:(NSError **)error {
+- (BOOL)populateIdentity:(NSMutableArray<TKTokenKeychainItem *> *)items smartcard:(TKSmartCard *)smartCard certificateID:(NSData*)certificateID name:(NSString *)certificateName keyID:(NSData*)keyID name:(NSString *)keyName auth:(BOOL)auth error:(NSError **)error {
     NSLog(@"EstEIDToken populateIdentityFromSmartCard cert %@ (%@) key %@ (%@)", certificateName, certificateID, keyName, keyID);
+
     // Create certificate item.
+    NSData *certificateData = [smartCard readFile:certificateID error:error];
+    if (certificateData == nil) {
+        return NO;
+    }
     id certificate = CFBridgingRelease(SecCertificateCreateWithData(kCFAllocatorDefault, (CFDataRef)certificateData));
-    if (certificate == NULL) {
+    if (certificate == nil) {
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"CORRUPTED_CERT", nil)}];
         }
         return NO;
     }
-
     TKTokenKeychainCertificate *certificateItem = [[TKTokenKeychainCertificate alloc] initWithCertificate:(__bridge SecCertificateRef)certificate objectID:certificateID];
     if (certificateItem == nil) {
         return NO;
@@ -135,13 +136,14 @@
 #endif
 
     keyItem.canSign = YES;
-    keyItem.canDecrypt = NO; //auth; FIXME: implement encryption
-    keyItem.suitableForLogin = NO; //auth;
-    keyItem.canPerformKeyExchange = NO;
+    keyItem.canDecrypt = NO; //auth; FIXME: implement decryption
+    keyItem.suitableForLogin = NO; //auth; FIXME: implement login
+    keyItem.canPerformKeyExchange = NO; //auth; FIXME: implement dervice
     NSMutableDictionary<NSNumber *, TKTokenOperationConstraint> *constraints = [NSMutableDictionary dictionary];
     constraints[@(TKTokenOperationSignData)] = EstEIDConstraintPIN;
     if (auth) {
         constraints[@(TKTokenOperationDecryptData)] = EstEIDConstraintPIN;
+        constraints[@(TKTokenOperationPerformKeyExchange)] = EstEIDConstraintPIN;
     }
     keyItem.constraints = constraints;
 
@@ -152,40 +154,29 @@
 
 - (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard AID:(nullable NSData *)AID tokenDriver:(TKSmartCardTokenDriver *)tokenDriver error:(NSError **)error {
     NSLog(@"EstEIDToken initWithSmartCard");
-
     NSString *instanceID;
-    NSData *auth/*, *sign*/; // FIXME: SIGN cert disabled
-    NSData *EEEE = [NSData dataWithBytes:(const UInt8[]){ 0xEE, 0xEE } length:2];
-    NSData *PERSO = [NSData dataWithBytes:(const UInt8[]){ 0x50, 0x44 } length:2];
-    NSData *AUTH = [NSData dataWithBytes:(const UInt8[]){ 0xAA, 0xCE } length:2];
-    //NSData *SIGN = [NSData dataWithBytes:(const UInt8[]){ 0xDD, 0xCE } length:2];
     if ([smartCard selectFile:0xA4 p1:0x00 p2:0x0C file:nil error:error] == nil ||
-        [smartCard selectFile:0xA4 p1:0x01 p2:0x0C file:EEEE error:error] == nil ||
-        [smartCard selectFile:0xA4 p1:0x02 p2:0x0C file:PERSO error:error] == nil ||
-        (instanceID = [smartCard readRecord:0x08 error:error]) == nil ||
-        (auth = [smartCard readFile:AUTH error:error]) == nil/* ||
-        (sign = [smartCard readFile:SIGN error:error]) == nil*/) {
+        [smartCard selectFile:0xA4 p1:0x01 p2:0x0C file:NSDATA(2, 0xEE, 0xEE) error:error] == nil ||
+        [smartCard selectFile:0xA4 p1:0x02 p2:0x0C file:NSDATA(2, 0x50, 0x44) error:error] == nil ||
+        (instanceID = [smartCard readRecord:0x08 error:error]) == nil) {
         NSLog(@"EstEIDToken initWithSmartCard failed to read card");
         return nil;
     }
     NSLog(@"EstEIDToken initWithSmartCard %@", instanceID);
-
     if (self = [super initWithSmartCard:smartCard AID:AID instanceID:instanceID tokenDriver:tokenDriver]) {
         // Prepare array with keychain items representing on card objects.
         NSMutableArray<TKTokenKeychainItem *> *items = [NSMutableArray arrayWithCapacity:2];
-        if (![self populateIdentity:items
-                      certificateID:@(0xAACE) name:NSLocalizedString(@"AUTH_CERT", nil) certData:auth
-                              keyID:@(0x1100) name:NSLocalizedString(@"AUTH_KEY", nil) auth:YES error:error]/* ||
-            ![self populateIdentity:items
-                      certificateID:@(0xDDCE) name:NSLocalizedString(@"SIGN_CERT", nil) certData:sign
-                              keyID:@(0x0100) name:NSLocalizedString(@"SIGN_KEY", nil) auth:NO error:error]*/) {
+        if (![self populateIdentity:items smartcard:smartCard
+                      certificateID:NSDATA(2, 0xAA, 0xCE) name:NSLocalizedString(@"AUTH_CERT", nil)
+                              keyID:NSDATA(2, 0x11, 0x00) name:NSLocalizedString(@"AUTH_KEY", nil) auth:YES error:error]/* ||
+            ![self populateIdentity:items smartcard:smartCard // FIXME: Sign cert disabled
+                      certificateID:NSDATA(2, 0xDD, 0xCE) name:NSLocalizedString(@"SIGN_CERT", nil)
+                              keyID:NSDATA(2, 0x01, 0x00) name:NSLocalizedString(@"SIGN_KEY", nil) auth:NO error:error]*/) {
             return nil;
         }
-
         // Populate keychain state with keys.
         [self.keychainContents fillWithItems:items];
     }
-
     return self;
 }
 
