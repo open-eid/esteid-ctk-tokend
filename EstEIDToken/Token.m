@@ -75,7 +75,7 @@
     UInt16 sw = 0;
     NSData *data = [self sendIns:0xB2 p1:record p2:0x04 data:nil le:@0 sw:&sw error:error];
     if (sw == 0x9000) {
-        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        return [[NSString alloc] initWithData:data encoding:NSWindowsCP1252StringEncoding];
     }
     NSLog(@"EstEIDToken readRecord failed to read record %@", @(record));
     if (error != nil) {
@@ -111,12 +111,15 @@
     id certificate = CFBridgingRelease(SecCertificateCreateWithData(kCFAllocatorDefault, (CFDataRef)certificateData));
     if (certificate == nil) {
         if (error != nil) {
-            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"CORRUPTED_CERT", nil)}];
+            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:nil];
         }
         return NO;
     }
     TKTokenKeychainCertificate *certificateItem = [[TKTokenKeychainCertificate alloc] initWithCertificate:(__bridge SecCertificateRef)certificate objectID:certificateID];
     if (certificateItem == nil) {
+        if (error != nil) {
+            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:nil];
+        }
         return NO;
     }
     [certificateItem setName:certificateName];
@@ -124,6 +127,9 @@
     // Create key item.
     TKTokenKeychainKey *keyItem = [[TKTokenKeychainKey alloc] initWithCertificate:(__bridge SecCertificateRef)certificate objectID:keyID];
     if (keyItem == nil) {
+        if (error != nil) {
+            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:nil];
+        }
         return NO;
     }
     [keyItem setName:keyName];
@@ -138,7 +144,7 @@
     keyItem.canSign = YES;
     keyItem.canDecrypt = NO; //auth; FIXME: implement decryption
     keyItem.suitableForLogin = NO; //auth; FIXME: implement login
-    keyItem.canPerformKeyExchange = NO; //auth; FIXME: implement dervice
+    keyItem.canPerformKeyExchange = NO; //auth; FIXME: implement derive
     NSMutableDictionary<NSNumber *, TKTokenOperationConstraint> *constraints = [NSMutableDictionary dictionary];
     constraints[@(TKTokenOperationSignData)] = EstEIDConstraintPIN;
     if (auth) {
@@ -153,7 +159,7 @@
 }
 
 - (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard AID:(nullable NSData *)AID tokenDriver:(TKSmartCardTokenDriver *)tokenDriver error:(NSError **)error {
-    NSLog(@"EstEIDToken initWithSmartCard");
+    NSLog(@"EstEIDToken initWithSmartCard AID %@", AID);
     NSString *instanceID;
     if ([smartCard selectFile:0xA4 p1:0x00 p2:0x0C file:nil error:error] == nil ||
         [smartCard selectFile:0xA4 p1:0x01 p2:0x0C file:NSDATA(2, 0xEE, 0xEE) error:error] == nil ||
@@ -183,6 +189,10 @@
 - (TKTokenSession *)token:(TKToken *)token createSessionWithError:(NSError **)error {
     NSLog(@"EstEIDToken createSessionWithError");
     return [[EstEIDTokenSession alloc] initWithToken:self];
+}
+
+- (void)token:(TKToken *)token terminateSession:(TKTokenSession *)session {
+    NSLog(@"EstEIDToken terminateSession");
 }
 
 @end

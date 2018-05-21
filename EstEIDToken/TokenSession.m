@@ -19,6 +19,7 @@
 
 #import "Token.h"
 
+#import <AppKit/AppKit.h>
 #import <Security/SecAsn1Coder.h>
 
 @implementation EstEIDAuthOperation
@@ -89,7 +90,25 @@
     if (pinpad != nil) {
         NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad");
         pinpad.PINMessageIndices = @[@0];
-        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+
+        // Open application for PinPAD notification
+        BOOL isRunning = NO;
+        for (NSRunningApplication *app in NSWorkspace.sharedWorkspace.runningApplications) {
+            if ([app.bundleIdentifier containsString:@"EstEIDTokenNotify"]) {
+                isRunning = YES;
+                break;
+            }
+        }
+        NSLog(@"EstEIDTokenSession beginAuthForOperation isRunning: %d", isRunning);
+        if (!isRunning) {
+            NSBundle *bundle = [NSBundle bundleForClass:EstEIDTokenDriver.class];
+            NSString *path = [bundle.bundlePath.stringByDeletingLastPathComponent.stringByDeletingLastPathComponent stringByAppendingString:@"/Resources/EstEIDTokenNotify.app"];
+            NSLog(@"EstEIDTokenSession beginAuthForOperation path: %@", path);
+            BOOL isLaunched = [NSWorkspace.sharedWorkspace launchApplication:path];
+            NSLog(@"EstEIDTokenSession beginAuthForOperation launchApplication: %d", isLaunched);
+        }
+        [NSDistributedNotificationCenter.defaultCenter postNotificationName:@"EstEIDTokenNotify" object:NSLocalizedString(@"ENTER_PINPAD", nil) userInfo:nil deliverImmediately:YES];
+
         [pinpad runWithReply:^(BOOL success, NSError *error) {
             NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed %@ %@ %04X", @(success), error, pinpad.resultSW);
             switch (pinpad.resultSW)
@@ -103,6 +122,7 @@
                     self.smartCard.context = nil;
                     break;
             }
+            [NSDistributedNotificationCenter.defaultCenter postNotificationName:@"EstEIDTokenNotify" object:nil userInfo:nil deliverImmediately:YES];
             dispatch_semaphore_signal(sem);
         }];
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
