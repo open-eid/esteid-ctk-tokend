@@ -187,7 +187,7 @@
 }
 
 - (TKTokenSession *)token:(TKToken *)token createSessionWithError:(NSError **)error {
-    NSLog(@"EstEIDToken createSessionWithError");
+    NSLog(@"EstEIDToken createSessionWithError %@", self.AID);
     return [[EstEIDTokenSession alloc] initWithToken:self];
 }
 
@@ -200,7 +200,8 @@
 @implementation EstEIDTokenDriver
 
 - (TKSmartCardToken *)tokenDriver:(TKSmartCardTokenDriver *)driver createTokenForSmartCard:(TKSmartCard *)smartCard AID:(NSData *)AID error:(NSError **)error {
-    NSLog(@"EstEIDTokenDriver createTokenForSmartCard AID %@", AID);
+    NSBundle *bundle = [NSBundle bundleForClass:EstEIDTokenDriver.class];
+    NSLog(@"EstEIDTokenDriver createTokenForSmartCard AID %@ version %@.%@", AID, bundle.infoDictionary[@"CFBundleShortVersionString"], bundle.infoDictionary[@"CFBundleVersion"]);
     return [[EstEIDToken alloc] initWithSmartCard:smartCard AID:AID tokenDriver:self error:error];
 }
 
