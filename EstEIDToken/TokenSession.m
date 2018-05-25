@@ -109,6 +109,7 @@
         }
         [NSDistributedNotificationCenter.defaultCenter postNotificationName:@"EstEIDTokenNotify" object:NSLocalizedString(@"ENTER_PINPAD", nil) userInfo:nil deliverImmediately:YES];
 
+        __block BOOL isCanceled = NO;
         [pinpad runWithReply:^(BOOL success, NSError *error) {
             NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed %@ %@ %04X", @(success), error, pinpad.resultSW);
             switch (pinpad.resultSW)
@@ -117,6 +118,8 @@
                     self.smartCard.sensitive = YES;
                     self.smartCard.context = @(YES);
                     break;
+                case 0x6401:
+                    isCanceled = YES;
                 default:
                     self.smartCard.sensitive = NO;
                     self.smartCard.context = nil;
@@ -127,6 +130,12 @@
         }];
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
         NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed");
+        if (isCanceled) {
+            if (error != nil) {
+                *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCanceledByUser userInfo:nil];
+            }
+            return nil;
+        }
         return [[TKTokenAuthOperation alloc] init];
     }
     return tokenAuth;
