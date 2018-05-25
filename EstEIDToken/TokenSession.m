@@ -57,16 +57,25 @@
         return NO;
     }
     self.smartCard.sensitive = YES;
-    self.smartCard.context = @(YES);
     return YES;
 }
 
 @end
 
-@implementation EstEIDTokenSession
+@implementation EstEIDTokenSession {
+    BOOL isSessionActive;
+}
+
+- (void)closeSession {
+    if (isSessionActive) {
+        [self.smartCard endSession];
+    }
+    isSessionActive = NO;
+    self.smartCard.sensitive = NO;
+}
 
 - (TKTokenAuthOperation *)tokenSession:(TKTokenSession *)session beginAuthForOperation:(TKTokenOperation)operation constraint:(TKTokenOperationConstraint)constraint error:(NSError **)error {
-    NSLog(@"EstEIDTokenSession beginAuthForOperation %@ constraint %@", @(operation), constraint);
+    NSLog(@"EstEIDTokenSession beginAuthForOperation %@ constraint %@ isSessionActive %d", @(operation), constraint, isSessionActive);
     if (![constraint isEqual:EstEIDConstraintPIN]) {
         NSLog(@"EstEIDTokenSession beginAuthForOperation attempt to evaluate unsupported constraint %@", constraint);
         if (error != nil) {
@@ -77,11 +86,14 @@
 
     // Begin session to avoid deauth before sign operation
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-    [self.smartCard beginSessionWithReply:^(BOOL success, NSError *error) {
-        NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply %@ %@", @(success), error);
-        dispatch_semaphore_signal(sem);
-    }];
-    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    if (!isSessionActive) {
+        [self.smartCard beginSessionWithReply:^(BOOL success, NSError *error) {
+            NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply %@ %@", @(success), error);
+            dispatch_semaphore_signal(sem);
+        }];
+        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+        isSessionActive = YES;
+    }
 
     TKTokenSmartCardPINAuthOperation *tokenAuth = [[EstEIDAuthOperation alloc] initWithSmartCard:self.smartCard];
 
@@ -116,13 +128,12 @@
             {
                 case 0x9000:
                     self.smartCard.sensitive = YES;
-                    self.smartCard.context = @(YES);
                     break;
                 case 0x6401:
                     isCanceled = YES;
+                    [self closeSession];
                 default:
                     self.smartCard.sensitive = NO;
-                    self.smartCard.context = nil;
                     break;
             }
             [NSDistributedNotificationCenter.defaultCenter postNotificationName:@"EstEIDTokenNotify" object:nil userInfo:nil deliverImmediately:YES];
@@ -186,14 +197,7 @@
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeTokenNotFound userInfo:nil];
         }
-        return nil;
-    }
-
-    if (self.smartCard.context == nil) {
-        NSLog(@"EstEIDTokenSession signData unauthicated");
-        if (error != nil) {
-            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeAuthenticationNeeded userInfo:nil];
-        }
+        [self closeSession];
         return nil;
     }
 
@@ -204,6 +208,7 @@
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:nil];
         }
+        [self closeSession];
         return nil;
     }
 
@@ -213,6 +218,7 @@
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:nil];
         }
+        [self closeSession];
         return nil;
     }
 
@@ -228,17 +234,24 @@
     }
 #endif
 
-    self.smartCard.useExtendedLength = NO;
     NSData *response = [self.smartCard sendIns:0x88 p1:0x00 p2:0x00 data:sign le:@0 sw:&sw error:error];
-    if (sw != 0x9000 || response == nil) {
-        NSLog(@"EstEIDTokenSession signData failed to sign");
-        return nil;
-    }
-
     // Deauth and release session
-    self.smartCard.sensitive = NO;
-    self.smartCard.context = nil;
-    [self.smartCard endSession];
+    [self closeSession];
+    switch (sw)
+    {
+        case 0x6982:
+            NSLog(@"EstEIDTokenSession signData unauthicated");
+            if (error != nil) {
+                *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeAuthenticationNeeded userInfo:nil];
+            }
+            return nil;
+        case 0x9000:
+            if (response != nil)
+                break;
+        default:
+            NSLog(@"EstEIDTokenSession signData failed to sign sw: %04x", sw);
+            return nil;
+    }
 
     if ([algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962] ||
         [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA1] ||
