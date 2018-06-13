@@ -19,6 +19,8 @@
 
 #import "Token.h"
 
+#import <AppKit/AppKit.h>
+
 @implementation TKSmartCard(EstEID)
 
 - (NSData*)selectFile:(UInt8)ins p1:(UInt8)p1 p2:(UInt8)p2 file:(nullable NSData *)file error:(NSError **)error {
@@ -202,7 +204,27 @@
 - (TKSmartCardToken *)tokenDriver:(TKSmartCardTokenDriver *)driver createTokenForSmartCard:(TKSmartCard *)smartCard AID:(NSData *)AID error:(NSError **)error {
     NSBundle *bundle = [NSBundle bundleForClass:EstEIDTokenDriver.class];
     NSLog(@"EstEIDTokenDriver createTokenForSmartCard AID %@ version %@.%@", AID, bundle.infoDictionary[@"CFBundleShortVersionString"], bundle.infoDictionary[@"CFBundleVersion"]);
+    [EstEIDTokenDriver showNotification:nil];
     return [[EstEIDToken alloc] initWithSmartCard:smartCard AID:AID tokenDriver:self error:error];
+}
+
++ (void)showNotification:(NSString*__nullable)msg {
+    BOOL isRunning = NO;
+    for (NSRunningApplication *app in NSWorkspace.sharedWorkspace.runningApplications) {
+        if ([app.bundleIdentifier containsString:@"EstEIDTokenNotify"]) {
+            isRunning = YES;
+            break;
+        }
+    }
+    NSLog(@"EstEIDTokenDriver showNotification isRunning: %d", isRunning);
+    if (!isRunning) {
+        NSBundle *bundle = [NSBundle bundleForClass:EstEIDTokenDriver.class];
+        NSString *path = [bundle.bundlePath.stringByDeletingLastPathComponent.stringByDeletingLastPathComponent stringByAppendingString:@"/Resources/EstEIDTokenNotify.app"];
+        NSLog(@"EstEIDTokenDriver showNotification path: %@", path);
+        BOOL isLaunched = [NSWorkspace.sharedWorkspace launchApplication:path];
+        NSLog(@"EstEIDTokenDriver showNotification launchApplication: %d", isLaunched);
+    }
+    [NSDistributedNotificationCenter.defaultCenter postNotificationName:@"EstEIDTokenNotify" object:msg userInfo:nil deliverImmediately:YES];
 }
 
 @end

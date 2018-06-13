@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 static const TKTokenOperationConstraint EstEIDConstraintPIN = @"PIN";
 
 @interface EstEIDTokenDriver : TKSmartCardTokenDriver<TKSmartCardTokenDriverDelegate>
++ (void)showNotification:(NSString*__nullable)msg;
 @end
 
 @interface EstEIDToken : TKSmartCardToken<TKTokenDelegate>
