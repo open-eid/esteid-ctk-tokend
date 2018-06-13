@@ -19,7 +19,6 @@
 
 #import "Token.h"
 
-#import <AppKit/AppKit.h>
 #import <Security/SecAsn1Coder.h>
 
 @implementation EstEIDAuthOperation
@@ -43,16 +42,17 @@
     if ((sw & 0xff00) == 0x6300) {
         int triesLeft = sw & 0x3f;
         NSLog(@"EstEIDAuthOperation finishWithError Failed to verify PIN sw:0x%04x retries: %d", sw, triesLeft);
+        [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
         if (error != nil) {
-            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeAuthenticationFailed userInfo:
-                      @{NSLocalizedDescriptionKey: [NSString localizedStringWithFormat: NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]}];
+            *error = [NSError errorWithDomain:TKErrorDomain code:triesLeft == 0 ? TKErrorCodeCanceledByUser : TKErrorCodeAuthenticationFailed userInfo:
+                      @{NSLocalizedDescriptionKey:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]}];
         }
         return NO;
     } else if (sw != 0x9000) {
         NSLog(@"EstEIDAuthOperation finishWithError Failed to verify PIN sw: 0x%04x", sw);
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeAuthenticationFailed userInfo:
-                      @{NSLocalizedDescriptionKey: [NSString localizedStringWithFormat: NSLocalizedString(@"VERIFY_TRY_LEFT", nil), 0]}];
+                      @{NSLocalizedDescriptionKey:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), 0]}];
         }
         return NO;
     }
@@ -102,46 +102,40 @@
     if (pinpad != nil) {
         NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad");
         pinpad.PINMessageIndices = @[@0];
-
-        // Open application for PinPAD notification
-        BOOL isRunning = NO;
-        for (NSRunningApplication *app in NSWorkspace.sharedWorkspace.runningApplications) {
-            if ([app.bundleIdentifier containsString:@"EstEIDTokenNotify"]) {
-                isRunning = YES;
-                break;
-            }
-        }
-        NSLog(@"EstEIDTokenSession beginAuthForOperation isRunning: %d", isRunning);
-        if (!isRunning) {
-            NSBundle *bundle = [NSBundle bundleForClass:EstEIDTokenDriver.class];
-            NSString *path = [bundle.bundlePath.stringByDeletingLastPathComponent.stringByDeletingLastPathComponent stringByAppendingString:@"/Resources/EstEIDTokenNotify.app"];
-            NSLog(@"EstEIDTokenSession beginAuthForOperation path: %@", path);
-            BOOL isLaunched = [NSWorkspace.sharedWorkspace launchApplication:path];
-            NSLog(@"EstEIDTokenSession beginAuthForOperation launchApplication: %d", isLaunched);
-        }
-        [NSDistributedNotificationCenter.defaultCenter postNotificationName:@"EstEIDTokenNotify" object:NSLocalizedString(@"ENTER_PINPAD", nil) userInfo:nil deliverImmediately:YES];
-
+        [EstEIDTokenDriver showNotification:NSLocalizedString(@"ENTER_PINPAD", nil)];
         __block BOOL isCanceled = NO;
         [pinpad runWithReply:^(BOOL success, NSError *error) {
             NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed %@ %@ %04X", @(success), error, pinpad.resultSW);
             switch (pinpad.resultSW)
             {
                 case 0x9000:
+                    [EstEIDTokenDriver showNotification:nil];
                     self.smartCard.sensitive = YES;
                     break;
-                case 0x6401:
+                case 0x63C0:
+                case 0x63C1:
+                case 0x63C2:
+                {
+                    int triesLeft = pinpad.resultSW & 0x3f;
+                    isCanceled = triesLeft == 0;
+                    [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+                    self.smartCard.sensitive = NO;
+                    break;
+                }
+                case 0x6400: // Timeout
+                case 0x6401: // Cancel
                     isCanceled = YES;
-                    [self closeSession];
                 default:
+                    [EstEIDTokenDriver showNotification:nil];
                     self.smartCard.sensitive = NO;
                     break;
             }
-            [NSDistributedNotificationCenter.defaultCenter postNotificationName:@"EstEIDTokenNotify" object:nil userInfo:nil deliverImmediately:YES];
             dispatch_semaphore_signal(sem);
         }];
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-        NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed");
+        NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed: %d", isCanceled);
         if (isCanceled) {
+            [self closeSession];
             if (error != nil) {
                 *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCanceledByUser userInfo:nil];
             }
