@@ -96,6 +96,12 @@
     }
 
     TKTokenSmartCardPINAuthOperation *tokenAuth = [[EstEIDAuthOperation alloc] initWithSmartCard:self.smartCard];
+    if ([self.smartCard.slot.name containsString:@"HID Global OMNIKEY 3x21 Smart Card Reader"] ||
+        [self.smartCard.slot.name containsString:@"HID Global OMNIKEY 6121 Smart Card Reader"])
+    {
+        NSLog(@"EstEIDTokenSession beginAuthForOperation '%@' is not PinPad reader", self.smartCard.slot.name);
+        return tokenAuth;
+    }
 
     // workaround: macOS does not support PINPad templates
     TKSmartCardUserInteractionForSecurePINVerification *pinpad = [self.smartCard userInteractionForSecurePINVerificationWithPINFormat:tokenAuth.PINFormat APDU:tokenAuth.APDUTemplate PINByteOffset:tokenAuth.PINByteOffset];
