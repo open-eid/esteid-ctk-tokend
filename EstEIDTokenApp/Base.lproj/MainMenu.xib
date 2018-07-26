@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13771" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14113" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13771"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14113"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -15,6 +15,8 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
             <connections>
+                <outlet property="text" destination="4gB-ZC-07g" id="ejs-Hc-m8q"/>
+                <outlet property="version" destination="vDc-9c-b4g" id="4Ga-ip-slU"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
         </customObject>
@@ -77,8 +79,42 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="NkD-8I-5o0">
-                        <rect key="frame" x="69" y="172" width="343" height="17"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Contact for assistance by email abi@id.ee or www.id.ee." id="VD0-B1-6pa">
+                        <rect key="frame" x="18" y="323" width="444" height="17"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Contact for assistance by email abi@id.ee or www.id.ee." id="VD0-B1-6pa">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fwQ-vo-cDU">
+                        <rect key="frame" x="20" y="20" width="440" height="270"/>
+                        <clipView key="contentView" id="Iqu-Cr-R49">
+                            <rect key="frame" x="1" y="1" width="438" height="268"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <textView importsGraphics="NO" verticallyResizable="YES" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" spellingCorrection="YES" smartInsertDelete="YES" id="4gB-ZC-07g">
+                                    <rect key="frame" x="0.0" y="0.0" width="438" height="268"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                    <size key="minSize" width="438" height="268"/>
+                                    <size key="maxSize" width="463" height="10000000"/>
+                                    <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                </textView>
+                            </subviews>
+                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        </clipView>
+                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="dWc-8a-sJA">
+                            <rect key="frame" x="-100" y="-100" width="87" height="18"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                        <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="UOd-fI-JEJ">
+                            <rect key="frame" x="423" y="1" width="16" height="268"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                    </scrollView>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vDc-9c-b4g">
+                        <rect key="frame" x="18" y="298" width="444" height="17"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Version: 1.0.0" id="9Pp-ko-iP0">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -86,8 +122,16 @@
                     </textField>
                 </subviews>
                 <constraints>
-                    <constraint firstItem="NkD-8I-5o0" firstAttribute="centerX" secondItem="EiT-Mj-1SZ" secondAttribute="centerX" id="Nvy-k0-vOL"/>
-                    <constraint firstItem="NkD-8I-5o0" firstAttribute="centerY" secondItem="EiT-Mj-1SZ" secondAttribute="centerY" id="o9e-3A-AXv"/>
+                    <constraint firstAttribute="trailing" secondItem="NkD-8I-5o0" secondAttribute="trailing" constant="20" symbolic="YES" id="28A-Ku-bhe"/>
+                    <constraint firstItem="vDc-9c-b4g" firstAttribute="top" secondItem="NkD-8I-5o0" secondAttribute="bottom" constant="8" symbolic="YES" id="Ax5-q7-eKh"/>
+                    <constraint firstAttribute="trailing" secondItem="fwQ-vo-cDU" secondAttribute="trailing" constant="20" symbolic="YES" id="G2E-k3-Zhz"/>
+                    <constraint firstAttribute="bottom" secondItem="fwQ-vo-cDU" secondAttribute="bottom" constant="20" symbolic="YES" id="JcE-v0-Ieb"/>
+                    <constraint firstItem="fwQ-vo-cDU" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="K5a-eF-yzB"/>
+                    <constraint firstItem="NkD-8I-5o0" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="VHh-37-hvu"/>
+                    <constraint firstItem="vDc-9c-b4g" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="mMM-kV-ujd"/>
+                    <constraint firstItem="fwQ-vo-cDU" firstAttribute="top" secondItem="vDc-9c-b4g" secondAttribute="bottom" constant="8" symbolic="YES" id="o0o-NL-FWK"/>
+                    <constraint firstAttribute="trailing" secondItem="vDc-9c-b4g" secondAttribute="trailing" constant="20" symbolic="YES" id="oaB-Pb-o64"/>
+                    <constraint firstItem="NkD-8I-5o0" firstAttribute="top" secondItem="EiT-Mj-1SZ" secondAttribute="top" constant="20" symbolic="YES" id="pTD-lZ-ibR"/>
                 </constraints>
             </view>
         </window>

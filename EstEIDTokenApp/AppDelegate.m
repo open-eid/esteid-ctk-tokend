@@ -20,8 +20,30 @@
 #import <Cocoa/Cocoa.h>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
+@property (weak) IBOutlet NSTextField *version;
+@property (unsafe_unretained) IBOutlet NSTextView *text;
 @property (weak) IBOutlet NSWindow *window;
 @end
 
 @implementation AppDelegate
+
+- (void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    self.version.stringValue = [NSString stringWithFormat:@"Version: %@.%@", NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"], NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]];
+
+    NSPipe *pipe = [NSPipe pipe];
+    NSFileHandle *file = pipe.fileHandleForReading;
+
+    NSTask *task = [[NSTask alloc] init];
+    task.launchPath = @"/usr/sbin/system_profiler";
+    task.arguments = @[@"SPSmartCardsDataType"];
+    task.standardOutput = pipe;
+    [task launch];
+
+    NSData *data = [file readDataToEndOfFile];
+    [file closeFile];
+
+    self.text.string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+}
+
 @end
