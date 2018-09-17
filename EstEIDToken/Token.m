@@ -136,13 +136,6 @@
     }
     [keyItem setName:keyName];
 
-#if ENABLE_RSA == 0
-    if ([keyItem.keyType isEqual:(id)kSecAttrKeyTypeRSA]) {
-        NSLog(@"EstEIDToken populateIdentityFromSmartCard: RSA support is disabled");
-        return NO;
-    }
-#endif
-
     keyItem.canSign = YES;
     keyItem.canDecrypt = NO; //auth; FIXME: implement decryption
     keyItem.suitableForLogin = NO; //auth; FIXME: implement login
