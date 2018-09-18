@@ -601,11 +601,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EstEIDToken/EstEIDToken.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				ENABLE_RSA = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"ENABLE_RSA=$(ENABLE_RSA)",
-				);
 				INFOPLIST_FILE = EstEIDToken/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -623,11 +618,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EstEIDToken/EstEIDToken.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				ENABLE_RSA = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"ENABLE_RSA=$(ENABLE_RSA)",
-				);
 				INFOPLIST_FILE = EstEIDToken/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
