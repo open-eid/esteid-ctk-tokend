@@ -21,7 +21,7 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property (weak) IBOutlet NSTextField *version;
-@property (unsafe_unretained) IBOutlet NSTextView *text;
+@property (weak) IBOutlet NSTextView *text;
 @property (weak) IBOutlet NSWindow *window;
 @end
 

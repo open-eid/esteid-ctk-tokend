@@ -45,14 +45,11 @@
     __block UInt16 length = 0x0600;
     TKBERTLVRecord *record = [TKBERTLVRecord recordFromData:data];
     if (record != nil) {
-        NSArray<TKTLVRecord *> *records = [TKBERTLVRecord sequenceOfRecordsFromData:record.value];
-        if (records != nil) {
-            [records enumerateObjectsUsingBlock:^(TKTLVRecord *obj, NSUInteger idx, BOOL *stop) {
-                if (obj.tag == 0x85) {
-                    length = CFSwapInt16BigToHost(*(UInt16*)obj.value.bytes);
-                    *stop = YES;
-                }
-            }];
+        for (TKTLVRecord *obj in [TKBERTLVRecord sequenceOfRecordsFromData:record.value]) {
+            if (obj.tag == 0x85) {
+                length = CFSwapInt16BigToHost(*(UInt16*)obj.value.bytes);
+                break;
+            }
         }
     }
 
@@ -102,15 +99,15 @@
 
 @implementation EstEIDToken
 
-- (BOOL)populateIdentity:(NSMutableArray<TKTokenKeychainItem *> *)items smartcard:(TKSmartCard *)smartCard certificateID:(NSData*)certificateID name:(NSString *)certificateName keyID:(NSData*)keyID name:(NSString *)keyName auth:(BOOL)auth error:(NSError **)error {
-    NSLog(@"EstEIDToken populateIdentityFromSmartCard cert %@ (%@) key %@ (%@)", certificateName, certificateID, keyName, keyID);
+- (BOOL)populateIdentity:(NSMutableArray<TKTokenKeychainItem *> *)items smartcard:(TKSmartCard *)smartCard certificateID:(NSData*)certificateID keyID:(NSData*)keyID auth:(BOOL)auth error:(NSError **)error {
+    NSLog(@"EstEIDToken populateIdentityFromSmartCard cert (%@) key (%@)", certificateID, keyID);
 
     // Create certificate item.
     NSData *certificateData = [smartCard readFile:certificateID error:error];
     if (certificateData == nil) {
         return NO;
     }
-    id certificate = CFBridgingRelease(SecCertificateCreateWithData(kCFAllocatorDefault, (CFDataRef)certificateData));
+    id certificate = CFBridgingRelease(SecCertificateCreateWithData(kCFAllocatorDefault, (__bridge CFDataRef)certificateData));
     if (certificate == nil) {
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:nil];
@@ -124,7 +121,7 @@
         }
         return NO;
     }
-    [certificateItem setName:certificateName];
+    [certificateItem setName:NSLocalizedString(auth ? @"AUTH_CERT" : @"SIGN_CERT", nil)];
 
     // Create key item.
     TKTokenKeychainKey *keyItem = [[TKTokenKeychainKey alloc] initWithCertificate:(__bridge SecCertificateRef)certificate objectID:keyID];
@@ -134,20 +131,14 @@
         }
         return NO;
     }
-    [keyItem setName:keyName];
-
+    [keyItem setName:NSLocalizedString(auth ? @"AUTH_KEY" : @"SIGN_KEY", nil)];
     keyItem.canSign = YES;
     keyItem.canDecrypt = NO; //auth; FIXME: implement decryption
     keyItem.suitableForLogin = NO; //auth; FIXME: implement login
     keyItem.canPerformKeyExchange = NO; //auth; FIXME: implement derive
-    NSMutableDictionary<NSNumber *, TKTokenOperationConstraint> *constraints = [NSMutableDictionary dictionary];
-    constraints[@(TKTokenOperationSignData)] = EstEIDConstraintPIN;
-    if (auth) {
-        constraints[@(TKTokenOperationDecryptData)] = EstEIDConstraintPIN;
-        constraints[@(TKTokenOperationPerformKeyExchange)] = EstEIDConstraintPIN;
-    }
-    keyItem.constraints = constraints;
-
+    keyItem.constraints = @{ @(TKTokenOperationSignData): EstEIDConstraintPIN };
+    // keyItem.constraints = constraints[@(TKTokenOperationDecryptData)] = EstEIDConstraintPIN; //auth; FIXME: implement decryption
+    // keyItem.constraints = constraints[@(TKTokenOperationPerformKeyExchange)] = EstEIDConstraintPIN; //auth; FIXME: implement derive
     [items addObject:certificateItem];
     [items addObject:keyItem];
     return YES;
@@ -168,11 +159,9 @@
         // Prepare array with keychain items representing on card objects.
         NSMutableArray<TKTokenKeychainItem *> *items = [NSMutableArray arrayWithCapacity:2];
         if (![self populateIdentity:items smartcard:smartCard
-                      certificateID:NSDATA(2, 0xAA, 0xCE) name:NSLocalizedString(@"AUTH_CERT", nil)
-                              keyID:NSDATA(2, 0x11, 0x00) name:NSLocalizedString(@"AUTH_KEY", nil) auth:YES error:error]/* ||
+                      certificateID:NSDATA(2, 0xAA, 0xCE) keyID:NSDATA(2, 0x11, 0x00) auth:YES error:error]/* ||
             ![self populateIdentity:items smartcard:smartCard // FIXME: Sign cert disabled
-                      certificateID:NSDATA(2, 0xDD, 0xCE) name:NSLocalizedString(@"SIGN_CERT", nil)
-                              keyID:NSDATA(2, 0x01, 0x00) name:NSLocalizedString(@"SIGN_KEY", nil) auth:NO error:error]*/) {
+                      certificateID:NSDATA(2, 0xDD, 0xCE) keyID:NSDATA(2, 0x01, 0x00) auth:NO error:error]*/) {
             return nil;
         }
         // Populate keychain state with keys.
