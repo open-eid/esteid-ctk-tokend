@@ -102,6 +102,31 @@
         isSessionActive = YES;
     }
 
+    UInt16 sw;
+    NSData *pinStatus;
+    if ([self.smartCard sendIns:0xA4 p1:0x00 p2:0x0C data:nil le:@0 sw:&sw  error:error] == nil ||
+        [self.smartCard sendIns:0xA4 p1:0x02 p2:0x0C data:NSDATA(2, 0x00, 0x16) le:@0 sw:&sw error:error] == nil ||
+        (pinStatus = [self.smartCard sendIns:0xB2 p1:0x01 p2:0x04 data:nil le:@0 sw:&sw error:error]) == nil) {
+        NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply %d", sw);
+        [self closeSession];
+        if (error != nil) {
+            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeAuthenticationFailed userInfo:@{NSLocalizedDescriptionKey:NSLocalizedString(@"WRONG_CONSTR", nil)}];
+        }
+        return nil;
+    }
+    UInt8 count = 0;
+    [pinStatus getBytes:&count range:NSMakeRange(5, sizeof(count))];
+    if (count == 0) {
+        NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply locked %d %@", count, pinStatus);
+        [self closeSession];
+        [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), 0]];
+        if (error != nil) {
+            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCanceledByUser
+                                     userInfo:@{NSLocalizedDescriptionKey:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), 0]}];
+        }
+        return nil;
+    }
+
     TKTokenSmartCardPINAuthOperation *tokenAuth = [[EstEIDAuthOperation alloc] initWithSmartCard:self.smartCard tokenSession:self];
     if ([self.smartCard.slot.name containsString:@"HID Global OMNIKEY 3x21 Smart Card Reader"] ||
         [self.smartCard.slot.name containsString:@"HID Global OMNIKEY 6121 Smart Card Reader"])
