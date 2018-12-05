@@ -34,8 +34,12 @@
     NSLog(@"EstEIDTokenNotify: notificationEvent %@", notification.object);
     NSUserNotificationCenter *center = NSUserNotificationCenter.defaultUserNotificationCenter;
     if (notification.object != nil) {
+        NSArray *list = [(NSString*)notification.object componentsSeparatedByString:@"\n"];
         NSUserNotification *ui = [NSUserNotification new];
-        ui.title = notification.object;
+        ui.title = list[0];
+        if (list.count > 1) {
+            ui.subtitle = list[1];
+        }
         ui.hasActionButton = NO;
         ui.soundName = NSUserNotificationDefaultSoundName;
         center.delegate = self;
