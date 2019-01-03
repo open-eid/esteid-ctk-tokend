@@ -36,6 +36,7 @@ static const TKTokenOperationConstraint EstEIDConstraintPIN = @"PIN";
 @end
 
 @interface EstEIDTokenSession : TKSmartCardTokenSession<TKTokenSessionDelegate>
+- (void)closeSession;
 @end
 
 @interface EstEIDAuthOperation : TKTokenSmartCardPINAuthOperation

@@ -21,15 +21,18 @@
 
 #import <Security/SecAsn1Coder.h>
 
-@implementation EstEIDAuthOperation
+@implementation EstEIDAuthOperation {
+    EstEIDTokenSession *session;
+}
 
-- (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard {
+- (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard tokenSession:(EstEIDTokenSession *)esteidsession {
     if (self = [super init]) {
         self.smartCard = smartCard;
         self.APDUTemplate = NSDATA(5, self.smartCard.cla, 0x20, 0x00, 0x01, 0x00);
         self.PINByteOffset = 5;
         self.PINFormat.maxPINLength = 12;
         self.PINFormat.PINBlockByteLength = 0;
+        session = esteidsession;
     }
     return self;
 }
@@ -43,6 +46,9 @@
         int triesLeft = sw & 0x3f;
         NSLog(@"EstEIDAuthOperation finishWithError Failed to verify PIN sw:0x%04x retries: %d", sw, triesLeft);
         [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+        if (triesLeft == 0) {
+            [session closeSession];
+        }
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:triesLeft == 0 ? TKErrorCodeCanceledByUser : TKErrorCodeAuthenticationFailed userInfo:
                       @{NSLocalizedDescriptionKey:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]}];
@@ -50,6 +56,7 @@
         return NO;
     } else if (sw != 0x9000) {
         NSLog(@"EstEIDAuthOperation finishWithError Failed to verify PIN sw: 0x%04x", sw);
+        [EstEIDTokenDriver showNotification:nil];
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeAuthenticationFailed userInfo:
                       @{NSLocalizedDescriptionKey:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), 0]}];
@@ -95,7 +102,7 @@
         isSessionActive = YES;
     }
 
-    TKTokenSmartCardPINAuthOperation *tokenAuth = [[EstEIDAuthOperation alloc] initWithSmartCard:self.smartCard];
+    TKTokenSmartCardPINAuthOperation *tokenAuth = [[EstEIDAuthOperation alloc] initWithSmartCard:self.smartCard tokenSession:self];
     if ([self.smartCard.slot.name containsString:@"HID Global OMNIKEY 3x21 Smart Card Reader"] ||
         [self.smartCard.slot.name containsString:@"HID Global OMNIKEY 6121 Smart Card Reader"])
     {
@@ -105,51 +112,52 @@
 
     // workaround: macOS does not support PINPad templates
     TKSmartCardUserInteractionForSecurePINVerification *pinpad = [self.smartCard userInteractionForSecurePINVerificationWithPINFormat:tokenAuth.PINFormat APDU:tokenAuth.APDUTemplate PINByteOffset:tokenAuth.PINByteOffset];
-    if (pinpad != nil) {
-        NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad");
-        pinpad.PINMessageIndices = @[@0];
-        [EstEIDTokenDriver showNotification:NSLocalizedString(@"ENTER_PINPAD", nil)];
-        __block BOOL isCanceled = NO;
-        [pinpad runWithReply:^(BOOL success, NSError *error) {
-            NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed %@ %@ %04X", @(success), error, pinpad.resultSW);
-            switch (pinpad.resultSW)
-            {
-                case 0x9000:
-                    [EstEIDTokenDriver showNotification:nil];
-                    self.smartCard.sensitive = YES;
-                    break;
-                case 0x63C0:
-                case 0x63C1:
-                case 0x63C2:
-                {
-                    int triesLeft = pinpad.resultSW & 0x3f;
-                    isCanceled = triesLeft == 0;
-                    [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
-                    self.smartCard.sensitive = NO;
-                    break;
-                }
-                case 0x6400: // Timeout
-                case 0x6401: // Cancel
-                    isCanceled = YES;
-                default:
-                    [EstEIDTokenDriver showNotification:nil];
-                    self.smartCard.sensitive = NO;
-                    break;
-            }
-            dispatch_semaphore_signal(sem);
-        }];
-        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-        NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed: %d", isCanceled);
-        if (isCanceled) {
-            [self closeSession];
-            if (error != nil) {
-                *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCanceledByUser userInfo:nil];
-            }
-            return nil;
-        }
-        return [[TKTokenAuthOperation alloc] init];
+    if (pinpad == nil) {
+        return tokenAuth;
     }
-    return tokenAuth;
+
+    NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad");
+    pinpad.PINMessageIndices = @[@0];
+    [EstEIDTokenDriver showNotification:NSLocalizedString(@"ENTER_PINPAD", nil)];
+    __block BOOL isCanceled = NO;
+    [pinpad runWithReply:^(BOOL success, NSError *error) {
+        NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed %@ %@ %04X", @(success), error, pinpad.resultSW);
+        switch (pinpad.resultSW)
+        {
+            case 0x9000:
+                [EstEIDTokenDriver showNotification:nil];
+                self.smartCard.sensitive = YES;
+                break;
+            case 0x63C0:
+            case 0x63C1:
+            case 0x63C2:
+            {
+                int triesLeft = pinpad.resultSW & 0x3f;
+                isCanceled = triesLeft == 0;
+                [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+                self.smartCard.sensitive = NO;
+                break;
+            }
+            case 0x6400: // Timeout
+            case 0x6401: // Cancel
+                isCanceled = YES;
+            default:
+                [EstEIDTokenDriver showNotification:nil];
+                self.smartCard.sensitive = NO;
+                break;
+        }
+        dispatch_semaphore_signal(sem);
+    }];
+    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed: %d", isCanceled);
+    if (isCanceled) {
+        [self closeSession];
+        if (error != nil) {
+            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCanceledByUser userInfo:nil];
+        }
+        return nil;
+    }
+    return [[TKTokenAuthOperation alloc] init];
 }
 
 - (BOOL)tokenSession:(TKTokenSession *)session supportsOperation:(TKTokenOperation)operation usingKey:(TKTokenObjectID)keyObjectID algorithm:(TKTokenKeyAlgorithm *)algorithm {
@@ -263,7 +271,7 @@
         } ECDSA;
 
         static const SecAsn1Template ECDSATemplate[] = {
-            { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(ECDSA) },
+            { SEC_ASN1_SEQUENCE, 0, nil, sizeof(ECDSA) },
             { SEC_ASN1_INTEGER, offsetof(ECDSA, r) },
             { SEC_ASN1_INTEGER, offsetof(ECDSA, s) },
             { 0 }
@@ -272,7 +280,7 @@
         uint8 *bytes = (uint8*)response.bytes;
         ECDSA ecdsa = {
             { response.length / 2, bytes },
-            { response.length / 2, &bytes[response.length / 2] },
+            { response.length / 2, bytes + (response.length / 2) },
         };
 
         SecAsn1CoderRef coder;
