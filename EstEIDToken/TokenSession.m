@@ -71,6 +71,7 @@
 
 @implementation EstEIDTokenSession {
     BOOL isSessionActive;
+    BOOL hasFailedAttempt;
 }
 
 - (void)closeSession {
@@ -114,12 +115,12 @@
         }
         return nil;
     }
-    UInt8 count = 0;
-    [pinStatus getBytes:&count range:NSMakeRange(5, sizeof(count))];
-    if (count == 0) {
-        NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply locked %d %@", count, pinStatus);
+    UInt8 triesLeft = 0;
+    [pinStatus getBytes:&triesLeft range:NSMakeRange(5, sizeof(triesLeft))];
+    if (triesLeft == 0) {
+        NSLog(@"EstEIDTokenSession beginAuthForOperation beginSessionWithReply locked %d %@", triesLeft, pinStatus);
         [self closeSession];
-        [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), 0]];
+        [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCanceledByUser
                                      userInfo:@{NSLocalizedDescriptionKey:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), 0]}];
@@ -143,7 +144,11 @@
 
     NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad");
     pinpad.PINMessageIndices = @[@0];
-    [EstEIDTokenDriver showNotification:NSLocalizedString(@"ENTER_PINPAD", nil)];
+    NSString *msg = NSLocalizedString(@"ENTER_PINPAD", nil);
+    if (self->hasFailedAttempt) {
+        msg = [NSString stringWithFormat:@"%@\n%@", msg, [NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+    }
+    [EstEIDTokenDriver showNotification:msg];
     __block BOOL isCanceled = NO;
     [pinpad runWithReply:^(BOOL success, NSError *error) {
         NSLog(@"EstEIDTokenSession beginAuthForOperation PINPad completed %@ %@ %04X", @(success), error, pinpad.resultSW);
@@ -159,7 +164,10 @@
             {
                 int triesLeft = pinpad.resultSW & 0x3f;
                 isCanceled = triesLeft == 0;
-                [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+                self->hasFailedAttempt = triesLeft > 0;
+                if (triesLeft == 0) {
+                    [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+                }
                 self.smartCard.sensitive = NO;
                 break;
             }
