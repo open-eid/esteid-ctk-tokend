@@ -32,14 +32,25 @@ static const TKTokenOperationConstraint EstEIDConstraintPIN = @"PIN";
 + (void)showNotification:(NSString*__nullable)msg;
 @end
 
-@interface EstEIDToken : TKSmartCardToken<TKTokenDelegate>
+@interface Token : TKSmartCardToken<TKTokenDelegate>
 @end
 
-@interface EstEIDTokenSession : TKSmartCardTokenSession<TKTokenSessionDelegate>
-- (void)closeSession;
+@interface EstEIDToken : Token
 @end
 
-@interface EstEIDAuthOperation : TKTokenSmartCardPINAuthOperation
+@interface IDEMIAToken : Token
+@end
+
+@interface TokenSession : TKSmartCardTokenSession<TKTokenSessionDelegate>
+@end
+
+@interface EstEIDTokenSession : TokenSession
+@end
+
+@interface IDEMIATokenSession : TokenSession
+@end
+
+@interface AuthOperation : TKTokenSmartCardPINAuthOperation
 @end
 
 NS_ASSUME_NONNULL_END

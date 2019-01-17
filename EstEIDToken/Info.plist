@@ -32,6 +32,7 @@
 			<array>
 				<string>F04573744549442076657220312E</string>
 				<string>D23300000045737445494420763335</string>
+				<string>A000000077010800070000FE00000100</string>
 			</array>
 			<key>com.apple.ctk.class-id</key>
 			<string>ee.ria.EstEIDTokenApp.EstEIDToken</string>
