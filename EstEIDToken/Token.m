@@ -23,9 +23,9 @@
 
 @implementation TKSmartCard(EstEID)
 
-- (NSData*)selectFile:(UInt8)ins p1:(UInt8)p1 p2:(UInt8)p2 file:(nullable NSData *)file error:(NSError **)error {
+- (NSData*)selectFile:(UInt8)p1 p2:(UInt8)p2 file:(nullable NSData *)file error:(NSError **)error {
     UInt16 sw = 0;
-    NSData *data = [self sendIns:ins p1:p1 p2:p2 data:file le:@0 sw:&sw error:error];
+    NSData *data = [self sendIns:0xA4 p1:p1 p2:p2 data:file le:@0 sw:&sw error:error];
     if (sw == 0x9000) {
         return data;
     }
@@ -36,36 +36,43 @@
     return nil;
 }
 
-- (nullable NSData*)readFile:(NSData*)file error:(NSError **) error {
-    NSData *data = [self selectFile:0xA4 p1:0x02 p2:0x04 file:file error:error];
+- (nullable NSData*)readBinary:(NSUInteger)pos error:(NSError **) error {
+    UInt16 sw = 0;
+    NSData *data = [self sendIns:0xB0 p1:(pos >> 8) p2:pos data:nil le:@0 sw:&sw error:error];
+    if (sw == 0x9000) {
+        return data;
+    }
+    NSLog(@"EstEIDToken readBinary failed to read binary at pos %@", @(pos));
+    if (error != nil) {
+        *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeObjectNotFound userInfo:nil];
+    }
+    return nil;
+}
+
+- (nullable NSData*)readCert:(NSData*)file error:(NSError **) error {
+    NSData *data = [self selectFile:0x02 p2:0x0C file:file error:error];
     if (data == nil) {
         return nil;
     }
 
-    __block UInt16 length = 0x0600;
-    TKBERTLVRecord *record = [TKBERTLVRecord recordFromData:data];
-    if (record != nil) {
-        for (TKTLVRecord *obj in [TKBERTLVRecord sequenceOfRecordsFromData:record.value]) {
-            if (obj.tag == 0x85) {
-                length = CFSwapInt16BigToHost(*(UInt16*)obj.value.bytes);
-                break;
-            }
-        }
+    data = [self readBinary:0 error:error];
+    if (data == nil) {
+        return nil;
     }
+    const UInt8 *byteData = (const UInt8*)data.bytes;
+    if (byteData[0] != (UInt8) 0x30 || byteData[1] != (UInt8) 0x82) {
+        return nil;
+    }
+    UInt16 length = (((byteData[2] & 0xFF) << 8) | (byteData[3] & 0xFF)) + 4;
 
     NSMutableData *fileData = [[NSMutableData alloc] init];
+    [fileData appendData:data];
     while (fileData.length < length) {
-        UInt16 sw = 0;
-        NSData *data = [self sendIns:0xB0 p1:(fileData.length >> 8) p2:fileData.length data:nil le:@0 sw:&sw error:error];
-        if (sw == 0x9000) {
-            [fileData appendData:data];
-            continue;
+        data = [self readBinary:fileData.length error:error];
+        if (data == nil) {
+            return nil;
         }
-        NSLog(@"EstEIDToken readFile failed to read file: %@", file);
-        if (error != nil) {
-            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeObjectNotFound userInfo:nil];
-        }
-        return nil;
+        [fileData appendData:data];
     }
     return fileData;
 }
@@ -97,16 +104,24 @@
 
 @end
 
-@implementation EstEIDToken
+@implementation Token
 
-- (BOOL)populateIdentity:(NSMutableArray<TKTokenKeychainItem *> *)items smartcard:(TKSmartCard *)smartCard certificateID:(NSData*)certificateID keyID:(NSData*)keyID auth:(BOOL)auth error:(NSError **)error {
-    NSLog(@"EstEIDToken populateIdentityFromSmartCard cert (%@) key (%@)", certificateID, keyID);
+- (TKTokenSession *)token:(TKToken *)token createSessionWithError:(NSError **)error {
+    NSLog(@"Token createSessionWithError not implemented %@", self.AID);
+    return nil;
+}
 
+- (void)token:(TKToken *)token terminateSession:(TKTokenSession *)session {
+    NSLog(@"Token terminateSession");
+}
+
+- (BOOL)populateIdentity:(NSData*)certificateData certificateID:(NSData*)certificateID keyID:(NSData*)keyID auth:(BOOL)auth error:(NSError **)error {
+    NSLog(@"Token populateIdentityFromSmartCard cert (%@) key (%@)", certificateID, keyID);
     // Create certificate item.
-    NSData *certificateData = [smartCard readFile:certificateID error:error];
     if (certificateData == nil) {
         return NO;
     }
+
     id certificate = CFBridgingRelease(SecCertificateCreateWithData(kCFAllocatorDefault, (__bridge CFDataRef)certificateData));
     if (certificate == nil) {
         if (error != nil) {
@@ -139,33 +154,32 @@
     keyItem.constraints = @{ @(TKTokenOperationSignData): EstEIDConstraintPIN };
     // keyItem.constraints = constraints[@(TKTokenOperationDecryptData)] = EstEIDConstraintPIN; //auth; FIXME: implement decryption
     // keyItem.constraints = constraints[@(TKTokenOperationPerformKeyExchange)] = EstEIDConstraintPIN; //auth; FIXME: implement derive
-    [items addObject:certificateItem];
-    [items addObject:keyItem];
+    // Populate keychain state with keys.
+    [self.keychainContents fillWithItems:@[certificateItem, keyItem]];
     return YES;
 }
+
+@end
+
+@implementation EstEIDToken
 
 - (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard AID:(nullable NSData *)AID tokenDriver:(TKSmartCardTokenDriver *)tokenDriver error:(NSError **)error {
     NSLog(@"EstEIDToken initWithSmartCard AID %@", AID);
     NSString *instanceID;
-    if ([smartCard selectFile:0xA4 p1:0x00 p2:0x0C file:nil error:error] == nil ||
-        [smartCard selectFile:0xA4 p1:0x01 p2:0x0C file:NSDATA(2, 0xEE, 0xEE) error:error] == nil ||
-        [smartCard selectFile:0xA4 p1:0x02 p2:0x0C file:NSDATA(2, 0x50, 0x44) error:error] == nil ||
+    if ([smartCard selectFile:0x00 p2:0x0C file:nil error:error] == nil ||
+        [smartCard selectFile:0x01 p2:0x0C file:NSDATA(2, 0xEE, 0xEE) error:error] == nil ||
+        [smartCard selectFile:0x02 p2:0x0C file:NSDATA(2, 0x50, 0x44) error:error] == nil ||
         (instanceID = [smartCard readRecord:0x08 error:error]) == nil) {
         NSLog(@"EstEIDToken initWithSmartCard failed to read card");
         return nil;
     }
     NSLog(@"EstEIDToken initWithSmartCard %@", instanceID);
     if (self = [super initWithSmartCard:smartCard AID:AID instanceID:instanceID tokenDriver:tokenDriver]) {
-        // Prepare array with keychain items representing on card objects.
-        NSMutableArray<TKTokenKeychainItem *> *items = [NSMutableArray arrayWithCapacity:2];
-        if (![self populateIdentity:items smartcard:smartCard
-                      certificateID:NSDATA(2, 0xAA, 0xCE) keyID:NSDATA(2, 0x11, 0x00) auth:YES error:error]/* ||
-            ![self populateIdentity:items smartcard:smartCard // FIXME: Sign cert disabled
-                      certificateID:NSDATA(2, 0xDD, 0xCE) keyID:NSDATA(2, 0x01, 0x00) auth:NO error:error]*/) {
+        NSData *certificateID = NSDATA(2, 0xAA, 0xCE);
+        NSData *keyID = NSDATA(2, 0x11, 0x00);
+        if (![super populateIdentity:[smartCard readCert:certificateID error:error] certificateID:certificateID keyID:keyID auth:YES error:error]) {
             return nil;
         }
-        // Populate keychain state with keys.
-        [self.keychainContents fillWithItems:items];
     }
     return self;
 }
@@ -175,8 +189,36 @@
     return [[EstEIDTokenSession alloc] initWithToken:self];
 }
 
-- (void)token:(TKToken *)token terminateSession:(TKTokenSession *)session {
-    NSLog(@"EstEIDToken terminateSession");
+@end
+
+@implementation IDEMIAToken
+
+- (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard AID:(nullable NSData *)AID tokenDriver:(TKSmartCardTokenDriver *)tokenDriver error:(NSError **)error {
+    NSLog(@"IDEMIAToken initWithSmartCard AID %@", AID);
+    NSData *data;
+    if ([smartCard selectFile:0x00 p2:0x0C file:nil error:error] == nil ||
+        [smartCard selectFile:0x01 p2:0x0C file:NSDATA(2, 0xD0, 0x03) error:error] == nil ||
+        (data = [smartCard readBinary:0 error:error]) == nil) {
+        NSLog(@"IDEMIAToken initWithSmartCard failed to read card");
+        return nil;
+    }
+    NSString *instanceID = [[NSString alloc] initWithBytes:data.bytes + 2 length:data.length - 2 encoding:NSUTF8StringEncoding];
+    NSLog(@"IDEMIAToken initWithSmartCard %@", instanceID);
+    if (self = [super initWithSmartCard:smartCard AID:AID instanceID:instanceID tokenDriver:tokenDriver]) {
+        NSData *certificateID = NSDATA(2, 0xAD, 0xF1);
+        NSData *keyID = NSDATA(2, 0x34, 0x01);
+        if ([smartCard selectFile:0x00 p2:0x0C file:nil error:error] == nil ||
+            [smartCard selectFile:0x01 p2:0x0C file:certificateID error:error] == nil ||
+            ![super populateIdentity:[smartCard readCert:keyID error:error] certificateID:certificateID keyID:keyID auth:YES error:error]) {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (TKTokenSession *)token:(TKToken *)token createSessionWithError:(NSError **)error {
+    NSLog(@"IDEMIAToken createSessionWithError %@", self.AID);
+    return [[IDEMIATokenSession alloc] initWithToken:self];
 }
 
 @end
@@ -187,6 +229,9 @@
     NSBundle *bundle = [NSBundle bundleForClass:EstEIDTokenDriver.class];
     NSLog(@"EstEIDTokenDriver createTokenForSmartCard AID %@ version %@.%@", AID, bundle.infoDictionary[@"CFBundleShortVersionString"], bundle.infoDictionary[@"CFBundleVersion"]);
     [EstEIDTokenDriver showNotification:nil];
+    if ([AID isEqualToData:NSDATA(16, 0xA0, 0x00, 0x00, 0x00, 0x77, 0x01, 0x08, 0x00, 0x07, 0x00, 0x00, 0xFE, 0x00, 0x00, 0x01, 0x00)]) {
+        return [[IDEMIAToken alloc] initWithSmartCard:smartCard AID:AID tokenDriver:self error:error];
+    }
     return [[EstEIDToken alloc] initWithSmartCard:smartCard AID:AID tokenDriver:self error:error];
 }
 
