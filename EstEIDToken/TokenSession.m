@@ -29,6 +29,14 @@
 
 @implementation AuthOperation {
     TokenSession *session;
+    BOOL isCancel;
+}
+
+- (void)dealloc {
+    NSLog(@"AuthOperation dealloc");
+    if (isCancel) {
+        [session closeSession];
+    }
 }
 
 - (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard tokenSession:(TokenSession *)esteidsession {
@@ -36,12 +44,14 @@
         self.smartCard = smartCard;
         [esteidsession pinPadTemplate:self];
         session = esteidsession;
+        isCancel = YES;
     }
     return self;
 }
 
 - (BOOL)finishWithError:(NSError **)error {
     NSLog(@"AuthOperation finishWithError %@", *error);
+    isCancel = NO;
     UInt16 sw = 0;
     [self.smartCard sendIns:0x20 p1:0x00 p2:0x01 data:[session pinTemplate:self.PIN] le:nil sw:&sw error:error];
     NSLog(@"AuthOperation finishWithError %@", *error);
