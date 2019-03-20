@@ -9,3 +9,4 @@
 "SIGN_KEY" = "Key For Digital Signature";
 "WRONG_CONSTR" = "Unexpected constraint";
 "ENTER_PINPAD" = "Please enter PIN code on PinPAD";
+"INVALID_PIN" = "Invalid PIN entered";

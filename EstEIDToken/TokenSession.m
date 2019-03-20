@@ -31,6 +31,12 @@
     TokenSession *session;
 }
 
+- (BOOL)isAllDigits:(NSString*)data {
+    NSCharacterSet* nonNumbers = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+    NSRange r = [data rangeOfCharacterFromSet: nonNumbers];
+    return r.location == NSNotFound && data.length > 0;
+}
+
 - (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard tokenSession:(TokenSession *)esteidsession {
     if (self = [super init]) {
         self.smartCard = smartCard;
@@ -42,6 +48,16 @@
 
 - (BOOL)finishWithError:(NSError **)error {
     NSLog(@"AuthOperation finishWithError %@", *error);
+    if (self.PIN.length < self.PINFormat.minPINLength || self.PIN.length > self.PINFormat.maxPINLength ||
+        ![self isAllDigits:self.PIN]) {
+        NSLog(@"AuthOperation finishWithError invalid PIN lenght: %lu min: %lu max: %lu", self.PIN.length, self.PINFormat.minPINLength, self.PINFormat.maxPINLength);
+        [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"INVALID_PIN", nil)]];
+        if (error != nil) {
+            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeAuthenticationFailed userInfo:
+                      @{NSLocalizedDescriptionKey:[NSString localizedStringWithFormat:NSLocalizedString(@"INVALID_PIN", nil)]}];
+        }
+        return NO;
+    }
     UInt16 sw = 0;
     [self.smartCard sendIns:0x20 p1:0x00 p2:0x01 data:[session pinTemplate:self.PIN] le:nil sw:&sw error:error];
     NSLog(@"AuthOperation finishWithError %@", *error);
