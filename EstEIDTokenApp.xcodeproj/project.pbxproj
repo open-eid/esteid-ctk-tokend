@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -90,7 +90,7 @@
 		2F3883BC1CF46C9D00F114A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F3883C41CF46D6F00F114A7 /* TokenSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TokenSession.m; sourceTree = "<group>"; };
 		2F7767741CF5E0A00062B0A8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		2F7767761CF5E0A00062B0A8 /* en */ = {isa = PBXFileReference; explicitFileType = text.plist.xml; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		2F7767761CF5E0A00062B0A8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		4EAFE859212C20BE00DD6D87 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/MainMenu.strings; sourceTree = "<group>"; };
 		4EAFE85B212C20BE00DD6D87 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4EAFE85C212C20BE00DD6D87 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ru; path = ru.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
@@ -261,7 +261,7 @@
 		2F3883901CF46C6E00F114A7 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1010;
+				LastUpgradeCheck = 1120;
 				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					2F3883971CF46C6E00F114A7 = {
@@ -286,8 +286,8 @@
 				};
 			};
 			buildConfigurationList = 2F3883931CF46C6E00F114A7 /* Build configuration list for PBXProject "EstEIDTokenApp" */;
-			compatibilityVersion = "Xcode 9.3";
-			developmentRegion = English;
+			compatibilityVersion = "Xcode 10.0";
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
@@ -483,8 +483,9 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 4F425HHPH8;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -504,9 +505,10 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 1.3.1;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				VERSION = 1.3.0;
+				VERSION = 1.3.1;
 			};
 			name = Debug;
 		};
@@ -547,6 +549,7 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 0;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4F425HHPH8;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -560,9 +563,10 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 1.3.1;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp --options=runtime";
 				SDKROOT = macosx;
-				VERSION = 1.3.0;
+				VERSION = 1.3.1;
 			};
 			name = Release;
 		};

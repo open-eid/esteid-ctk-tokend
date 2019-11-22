@@ -8,4 +8,5 @@
 "AUTH_KEY" = "Key For Card Authentication";
 "SIGN_KEY" = "Key For Digital Signature";
 "WRONG_CONSTR" = "Unexpected constraint";
-"ENTER_PINPAD" = "Please enter PIN code on PinPAD";
+"ENTER_PINPAD" = "Palun sisestada PIN kaardilugeja sõrmistikult";
+"INVALID_PIN" = "Sisestati ebakorrektne PIN";
