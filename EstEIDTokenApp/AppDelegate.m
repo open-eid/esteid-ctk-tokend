@@ -43,7 +43,9 @@
     NSData *data = [file readDataToEndOfFile];
     [file closeFile];
 
-    self.text.string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NSMutableAttributedString *text = [[NSMutableAttributedString alloc] initWithString:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]
+                                                                             attributes:@{NSForegroundColorAttributeName : NSColor.controlTextColor}];
+    self.text.textStorage.attributedString = text;
 
     NSDictionary *find = @{
         (__bridge id)kSecClass: (__bridge id)kSecClassKey,
@@ -53,9 +55,11 @@
     CFArrayRef itemsTemp = nil;
     SecItemCopyMatching((__bridge CFDictionaryRef)find, (CFTypeRef *)&itemsTemp);
     NSArray *items = CFBridgingRelease(itemsTemp);
+    NSMutableString *string = text.mutableString;
     for (NSDictionary *key in items) {
         if ([(NSString*)key[(__bridge id)kSecAttrTokenID] containsString:@"ee.ria.EstEIDTokenApp.EstEIDToken"]) {
-            self.text.string = [NSString stringWithFormat:@"%@\nKey: %@", self.text.string, key];
+            [string appendFormat:@"\nKey: %@", key];
+            self.text.textStorage.attributedString = text;
         }
     }
 }
