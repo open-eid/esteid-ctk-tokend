@@ -44,6 +44,20 @@
     [file closeFile];
 
     self.text.string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+    NSDictionary *find = @{
+        (__bridge id)kSecClass: (__bridge id)kSecClassKey,
+        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+        (__bridge id)kSecMatchLimit: (__bridge id)kSecMatchLimitAll,
+    };
+    CFArrayRef itemsTemp = nil;
+    SecItemCopyMatching((__bridge CFDictionaryRef)find, (CFTypeRef *)&itemsTemp);
+    NSArray *items = CFBridgingRelease(itemsTemp);
+    for (NSDictionary *key in items) {
+        if ([(NSString*)key[(__bridge id)kSecAttrTokenID] containsString:@"ee.ria.EstEIDTokenApp.EstEIDToken"]) {
+            self.text.string = [NSString stringWithFormat:@"%@\nKey: %@", self.text.string, key];
+        }
+    }
 }
 
 @end
