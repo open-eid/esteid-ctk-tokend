@@ -10,7 +10,7 @@
  * EstEIDTokenApp - Blank application, contains CTK tokend extension
 
 ## Building
-[![Build Status](https://travis-ci.com/open-eid/esteid-ctk-tokend.svg?branch=master)](https://travis-ci.com/open-eid/esteid-ctk-tokend)
+[![Build Status](https://github.com/open-eid/esteid-ctk-tokend/workflows/CI/badge.svg?branch=master)](https://github.com/open-eid/esteid-ctk-tokend/actions)
  
  1. Install dependencies from
    * [XCode](https://itunes.apple.com/en/app/xcode/id497799835?mt=12)
