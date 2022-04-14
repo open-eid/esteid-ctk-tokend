@@ -37,11 +37,11 @@
     return r.location == NSNotFound && data.length > 0;
 }
 
-- (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard tokenSession:(TokenSession *)esteidsession {
+- (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard tokenSession:(TokenSession *)eidsession {
     if (self = [super init]) {
         self.smartCard = smartCard;
-        [esteidsession pinPadTemplate:self];
-        session = esteidsession;
+        [eidsession pinPadTemplate:self];
+        session = eidsession;
     }
     return self;
 }
@@ -64,7 +64,13 @@
     if ((sw & 0xff00) == 0x6300 || sw == 0x6983) {
         int triesLeft = sw == 0x6983 ? 0 : sw & 0x3f;
         NSLog(@"EstEIDAuthOperation finishWithError Failed to verify PIN sw:0x%04x retries: %d", sw, triesLeft);
-        [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+        if (@available(macOS 12, *)) {
+            if (triesLeft == 0) {
+                [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+            }
+        } else {
+            [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
+        }
         if (triesLeft == 0) {
             [session closeSession];
         }
