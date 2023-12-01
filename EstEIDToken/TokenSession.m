@@ -352,54 +352,6 @@
 
 @end
 
-@implementation EstEIDTokenSession
-
-- (BOOL)initSignEnv:(NSError **)error {
-    NSLog(@"EstEIDTokenSession initSignEnv");
-    UInt16 sw;
-    [self.smartCard sendIns:0x22 p1:0xF3 p2:0x01 data:nil le:@0 sw:&sw error:error];
-    if (sw != 0x9000) {
-        NSLog(@"EstEIDTokenSession signData failed to set sec env");
-        if (error != nil) {
-            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:nil];
-        }
-        [self closeSession];
-        return NO;
-    }
-
-    [self.smartCard sendIns:0x22 p1:0x41 p2:0xB8 data:NSDATA(2, 0x83, 0x00) le:nil sw:&sw error:error]; //Key reference, 8303801100
-    if (sw != 0x9000) {
-        NSLog(@"EstEIDTokenSession signData failed to select default key");
-        if (error != nil) {
-            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeCorruptedData userInfo:nil];
-        }
-        [self closeSession];
-        return NO;
-    }
-    return YES;
-}
-
-- (UInt8)triesLeft:(NSError **)error {
-    NSLog(@"EstEIDTokenSession triesLeft");
-    UInt16 sw;
-    NSData *pinStatus;
-    if ([self.smartCard sendIns:0xA4 p1:0x00 p2:0x0C data:nil le:@0 sw:&sw error:error] == nil ||
-        [self.smartCard sendIns:0xA4 p1:0x02 p2:0x0C data:NSDATA(2, 0x00, 0x16) le:@0 sw:&sw error:error] == nil ||
-        (pinStatus = [self.smartCard sendIns:0xB2 p1:0x01 p2:0x04 data:nil le:@0 sw:&sw error:error]) == nil) {
-        NSLog(@"EstEIDTokenSession triesLeft %d %@", sw, pinStatus);
-        [self closeSession];
-        if (error != nil) {
-            *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeAuthenticationFailed userInfo:@{NSLocalizedDescriptionKey:NSLocalizedString(@"WRONG_CONSTR", nil)}];
-        }
-        return 0;
-    }
-    UInt8 triesLeft = 0;
-    [pinStatus getBytes:&triesLeft range:NSMakeRange(5, sizeof(triesLeft))];
-    return triesLeft;
-}
-
-@end
-
 @implementation IDEMIATokenSession
 
 - (BOOL)initSignEnv:(NSError **)error {
