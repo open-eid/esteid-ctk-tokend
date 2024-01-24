@@ -77,19 +77,6 @@
     return fileData;
 }
 
-- (nullable NSString*)readRecord:(UInt8)record error:(NSError **) error {
-    UInt16 sw = 0;
-    NSData *data = [self sendIns:0xB2 p1:record p2:0x04 data:nil le:@0 sw:&sw error:error];
-    if (sw == 0x9000) {
-        return [[NSString alloc] initWithData:data encoding:NSWindowsCP1252StringEncoding];
-    }
-    NSLog(@"EstEIDToken readRecord failed to read record %@", @(record));
-    if (error != nil) {
-        *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeObjectNotFound userInfo:nil];
-    }
-    return nil;
-}
-
 @end
 
 @implementation TKTokenKeychainItem(EstEIDDataFormat)
@@ -148,45 +135,14 @@
     }
     [keyItem setName:NSLocalizedString(auth ? @"AUTH_KEY" : @"SIGN_KEY", nil)];
     keyItem.canSign = YES;
-    keyItem.canDecrypt = NO; //auth; FIXME: implement decryption
+    keyItem.canDecrypt = NO;
     keyItem.suitableForLogin = NO; //auth; FIXME: implement login
     keyItem.canPerformKeyExchange = NO; //auth; FIXME: implement derive
     keyItem.constraints = @{ @(TKTokenOperationSignData): EstEIDConstraintPIN };
-    // keyItem.constraints = constraints[@(TKTokenOperationDecryptData)] = EstEIDConstraintPIN; //auth; FIXME: implement decryption
     // keyItem.constraints = constraints[@(TKTokenOperationPerformKeyExchange)] = EstEIDConstraintPIN; //auth; FIXME: implement derive
     // Populate keychain state with keys.
     [self.keychainContents fillWithItems:@[certificateItem, keyItem]];
     return YES;
-}
-
-@end
-
-@implementation EstEIDToken
-
-- (nullable instancetype)initWithSmartCard:(TKSmartCard *)smartCard AID:(nullable NSData *)AID tokenDriver:(TKSmartCardTokenDriver *)tokenDriver error:(NSError **)error {
-    NSLog(@"EstEIDToken initWithSmartCard AID %@", AID);
-    NSString *instanceID;
-    if ([smartCard selectFile:0x00 p2:0x0C file:nil error:error] == nil ||
-        [smartCard selectFile:0x01 p2:0x0C file:NSDATA(2, 0xEE, 0xEE) error:error] == nil ||
-        [smartCard selectFile:0x02 p2:0x0C file:NSDATA(2, 0x50, 0x44) error:error] == nil ||
-        (instanceID = [smartCard readRecord:0x08 error:error]) == nil) {
-        NSLog(@"EstEIDToken initWithSmartCard failed to read card");
-        return nil;
-    }
-    NSLog(@"EstEIDToken initWithSmartCard %@", instanceID);
-    if (self = [super initWithSmartCard:smartCard AID:AID instanceID:instanceID tokenDriver:tokenDriver]) {
-        NSData *certificateID = NSDATA(2, 0xAA, 0xCE);
-        NSData *keyID = NSDATA(2, 0x11, 0x00);
-        if (![super populateIdentity:[smartCard readCert:certificateID error:error] certificateID:certificateID keyID:keyID auth:YES error:error]) {
-            return nil;
-        }
-    }
-    return self;
-}
-
-- (TKTokenSession *)token:(TKToken *)token createSessionWithError:(NSError **)error {
-    NSLog(@"EstEIDToken createSessionWithError %@", self.AID);
-    return [[EstEIDTokenSession alloc] initWithToken:self];
 }
 
 @end
@@ -229,10 +185,7 @@
     NSBundle *bundle = [NSBundle bundleForClass:EstEIDTokenDriver.class];
     NSLog(@"EstEIDTokenDriver createTokenForSmartCard AID %@ version %@.%@", AID, bundle.infoDictionary[@"CFBundleShortVersionString"], bundle.infoDictionary[@"CFBundleVersion"]);
     [EstEIDTokenDriver showNotification:nil];
-    if ([AID isEqualToData:NSDATA(16, 0xA0, 0x00, 0x00, 0x00, 0x77, 0x01, 0x08, 0x00, 0x07, 0x00, 0x00, 0xFE, 0x00, 0x00, 0x01, 0x00)]) {
-        return [[IDEMIAToken alloc] initWithSmartCard:smartCard AID:AID tokenDriver:self error:error];
-    }
-    return [[EstEIDToken alloc] initWithSmartCard:smartCard AID:AID tokenDriver:self error:error];
+    return [[IDEMIAToken alloc] initWithSmartCard:smartCard AID:AID tokenDriver:self error:error];
 }
 
 + (void)showNotification:(NSString*__nullable)msg {
@@ -248,8 +201,9 @@
         NSBundle *bundle = [NSBundle bundleForClass:EstEIDTokenDriver.class];
         NSString *path = [bundle.bundlePath.stringByDeletingLastPathComponent.stringByDeletingLastPathComponent stringByAppendingString:@"/Resources/EstEIDTokenNotify.app"];
         NSLog(@"EstEIDTokenDriver showNotification path: %@", path);
-        BOOL isLaunched = [NSWorkspace.sharedWorkspace launchApplication:path];
-        NSLog(@"EstEIDTokenDriver showNotification launchApplication: %d", isLaunched);
+        [NSWorkspace.sharedWorkspace openApplicationAtURL:[NSURL fileURLWithPath:path isDirectory:YES] configuration:NSWorkspaceOpenConfiguration.configuration completionHandler:^(NSRunningApplication *app, NSError *error) {
+            NSLog(@"EstEIDTokenDriver showNotification openApplicationAtURL: %@", error);
+        }];
     }
     [NSDistributedNotificationCenter.defaultCenter postNotificationName:@"EstEIDTokenNotify" object:msg userInfo:nil deliverImmediately:YES];
 }
