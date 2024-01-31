@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 55;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -22,15 +22,14 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		2F38839D1CF46C6E00F114A7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F38839C1CF46C6E00F114A7 /* AppDelegate.m */; };
-		2F3883A01CF46C6E00F114A7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F38839F1CF46C6E00F114A7 /* main.m */; };
+		2F38839D1CF46C6E00F114A7 /* EstEidTokenApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F38839C1CF46C6E00F114A7 /* EstEidTokenApp.swift */; };
 		2F3883A21CF46C6E00F114A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F3883A11CF46C6E00F114A7 /* Assets.xcassets */; };
-		2F3883A51CF46C6F00F114A7 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2F3883A31CF46C6F00F114A7 /* MainMenu.xib */; };
 		2F3883B91CF46C9D00F114A7 /* Token.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F3883B81CF46C9D00F114A7 /* Token.m */; };
 		2F3883BF1CF46C9D00F114A7 /* EstEIDToken.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2F3883B01CF46C9D00F114A7 /* EstEIDToken.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2F3883C51CF46D6F00F114A7 /* TokenSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F3883C41CF46D6F00F114A7 /* TokenSession.m */; };
 		4E77CCA42B5E85AB00518F62 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4E77CCA32B5E85AB00518F62 /* Localizable.xcstrings */; };
 		4E77CCCB2B5EFD8B00518F62 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E77CCAB2B5EFCF400518F62 /* AppDelegate.swift */; };
+		4EEEB3E22B6AEC9B00138C48 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4EEEB3E12B6AEC9B00138C48 /* Localizable.xcstrings */; };
 		4EF3231920AC184000809D13 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4EF3231720AC184000809D13 /* Main.storyboard */; };
 		4EF3232620AC1B4000809D13 /* EstEIDTokenNotify.app in Resources */ = {isa = PBXBuildFile; fileRef = 4EF3230D20AC183E00809D13 /* EstEIDTokenNotify.app */; };
 		4EF3232820AC304C00809D13 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4EF3232720AC304C00809D13 /* Assets.xcassets */; };
@@ -76,19 +75,17 @@
 
 /* Begin PBXFileReference section */
 		2F3883981CF46C6E00F114A7 /* EstEIDTokenApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EstEIDTokenApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		2F38839C1CF46C6E00F114A7 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		2F38839F1CF46C6E00F114A7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		2F38839C1CF46C6E00F114A7 /* EstEidTokenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstEidTokenApp.swift; sourceTree = "<group>"; };
 		2F3883A11CF46C6E00F114A7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		2F3883A41CF46C6F00F114A7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		2F3883B01CF46C9D00F114A7 /* EstEIDToken.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EstEIDToken.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F3883B61CF46C9D00F114A7 /* EstEIDToken.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EstEIDToken.entitlements; sourceTree = "<group>"; };
 		2F3883B71CF46C9D00F114A7 /* Token.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Token.h; sourceTree = "<group>"; };
 		2F3883B81CF46C9D00F114A7 /* Token.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Token.m; sourceTree = "<group>"; };
 		2F3883BC1CF46C9D00F114A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F3883C41CF46D6F00F114A7 /* TokenSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TokenSession.m; sourceTree = "<group>"; };
-		4E77CCA12B5E85AB00518F62 /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/MainMenu.xcstrings; sourceTree = "<group>"; };
 		4E77CCA32B5E85AB00518F62 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		4E77CCAB2B5EFCF400518F62 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4EEEB3E12B6AEC9B00138C48 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		4EF3230D20AC183E00809D13 /* EstEIDTokenNotify.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EstEIDTokenNotify.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EF3231820AC184000809D13 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		4EF3232720AC304C00809D13 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = EstEIDTokenApp/Assets.xcassets; sourceTree = SOURCE_ROOT; };
@@ -142,10 +139,9 @@
 		2F38839A1CF46C6E00F114A7 /* EstEIDTokenApp */ = {
 			isa = PBXGroup;
 			children = (
-				2F38839C1CF46C6E00F114A7 /* AppDelegate.m */,
+				2F38839C1CF46C6E00F114A7 /* EstEidTokenApp.swift */,
 				2F3883A11CF46C6E00F114A7 /* Assets.xcassets */,
-				2F3883A31CF46C6F00F114A7 /* MainMenu.xib */,
-				2F38839F1CF46C6E00F114A7 /* main.m */,
+				4EEEB3E12B6AEC9B00138C48 /* Localizable.xcstrings */,
 			);
 			path = EstEIDTokenApp;
 			sourceTree = "<group>";
@@ -300,7 +296,7 @@
 			files = (
 				2F3883A21CF46C6E00F114A7 /* Assets.xcassets in Resources */,
 				4EF3232620AC1B4000809D13 /* EstEIDTokenNotify.app in Resources */,
-				2F3883A51CF46C6F00F114A7 /* MainMenu.xib in Resources */,
+				4EEEB3E22B6AEC9B00138C48 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -346,8 +342,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2F3883A01CF46C6E00F114A7 /* main.m in Sources */,
-				2F38839D1CF46C6E00F114A7 /* AppDelegate.m in Sources */,
+				2F38839D1CF46C6E00F114A7 /* EstEidTokenApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,15 +384,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		2F3883A31CF46C6F00F114A7 /* MainMenu.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				2F3883A41CF46C6F00F114A7 /* Base */,
-				4E77CCA12B5E85AB00518F62 /* mul */,
-			);
-			name = MainMenu.xib;
-			sourceTree = "<group>";
-		};
 		4EF3231720AC184000809D13 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -545,7 +531,6 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INSTALL_PATH = "$(LOCAL_APPS_DIR)/Utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -553,6 +538,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -563,7 +551,6 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INSTALL_PATH = "$(LOCAL_APPS_DIR)/Utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -571,6 +558,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
