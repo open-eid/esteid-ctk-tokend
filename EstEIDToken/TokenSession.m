@@ -244,7 +244,6 @@
     switch (operation) {
         case TKTokenOperationSignData:
             supports = keyItem.canSign && (
-                [algorithm isAlgorithm:kSecKeyAlgorithmRSASignatureRaw] ||
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureRFC4754] ||
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962] ||
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA1] ||
@@ -252,9 +251,6 @@
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA256] ||
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA384] ||
                 [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA512]);
-            break;
-        case TKTokenOperationDecryptData:
-            //supports = keyItem.canDecrypt && [algorithm isAlgorithm:kSecKeyAlgorithmRSAEncryptionRaw]; // FIXME: implement decryption
             break;
         case TKTokenOperationPerformKeyExchange:
             //supports = keyItem.canPerformKeyExchange && [algorithm isAlgorithm:kSecKeyAlgorithmECDHKeyExchangeStandard]; // FIXME: implement derive
@@ -283,18 +279,8 @@
         return nil;
     }
 
-    NSData *sign = dataToSign;
-    if ([algorithm isAlgorithm:kSecKeyAlgorithmRSASignatureRaw]) {
-        NSLog(@"TokenSession Remove PKCS1 1.5 padding");
-        //  00 01 FF FF 00 ....
-        const char *string = dataToSign.bytes;
-        char *e = strchr(&string[3], '\0'); // Start at pos 3
-        NSUInteger pos = (NSUInteger)(e - string) + 1;
-        sign = [dataToSign subdataWithRange:NSMakeRange(pos, dataToSign.length - pos)];
-    }
-
     UInt16 sw = 0;
-    NSData *response = [self.smartCard sendIns:0x88 p1:0x00 p2:0x00 data:sign le:@0 sw:&sw error:error];
+    NSData *response = [self.smartCard sendIns:0x88 p1:0x00 p2:0x00 data:dataToSign le:@0 sw:&sw error:error];
     // Deauth and release session
     [self closeSession];
     switch (sw)

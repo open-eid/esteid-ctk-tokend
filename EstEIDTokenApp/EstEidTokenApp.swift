@@ -53,7 +53,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            Text("In case of questions please contact our support via id.ee")
+            Text("In case of questions please contact our support via https://www.id.ee")
             Text("Version: \(version)")
             TextEditor(text: .constant(text))
         }
