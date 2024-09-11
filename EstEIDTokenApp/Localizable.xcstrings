@@ -1,18 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "In case of questions please contact our support via id.ee" : {
+    "In case of questions please contact our support via https://www.id.ee" : {
       "localizations" : {
         "et" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Küsimuste korral pöörduge id.ee"
+            "value" : "Küsimuste korral pöörduge https://www.id.ee"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Если у вас возникнут вопросы, пожалуйста, обратитесь на id.ee"
+            "value" : "Если у вас возникнут вопросы, пожалуйста, обратитесь на https://www.id.ee"
           }
         }
       }

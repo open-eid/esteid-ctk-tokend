@@ -27,7 +27,8 @@
 		2F3883B91CF46C9D00F114A7 /* Token.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F3883B81CF46C9D00F114A7 /* Token.m */; };
 		2F3883BF1CF46C9D00F114A7 /* EstEIDToken.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2F3883B01CF46C9D00F114A7 /* EstEIDToken.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2F3883C51CF46D6F00F114A7 /* TokenSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F3883C41CF46D6F00F114A7 /* TokenSession.m */; };
-		4E77CCA42B5E85AB00518F62 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4E77CCA32B5E85AB00518F62 /* Localizable.xcstrings */; };
+		2F7767771CF5E0A00062B0A8 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2F7767731CF5E0A00062B0A8 /* Localizable.strings */; };
+		2F7767781CF5E0A00062B0A8 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 2F7767751CF5E0A00062B0A8 /* Localizable.stringsdict */; };
 		4E77CCCB2B5EFD8B00518F62 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E77CCAB2B5EFCF400518F62 /* AppDelegate.swift */; };
 		4EEEB3E22B6AEC9B00138C48 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4EEEB3E12B6AEC9B00138C48 /* Localizable.xcstrings */; };
 		4EF3231920AC184000809D13 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4EF3231720AC184000809D13 /* Main.storyboard */; };
@@ -83,8 +84,15 @@
 		2F3883B81CF46C9D00F114A7 /* Token.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Token.m; sourceTree = "<group>"; };
 		2F3883BC1CF46C9D00F114A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F3883C41CF46D6F00F114A7 /* TokenSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TokenSession.m; sourceTree = "<group>"; };
-		4E77CCA32B5E85AB00518F62 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		2F7767741CF5E0A00062B0A8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		2F7767761CF5E0A00062B0A8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		4E77CCAB2B5EFCF400518F62 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4EAFE85B212C20BE00DD6D87 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
+		4EAFE85C212C20BE00DD6D87 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ru; path = ru.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		4EAFE85F212C20F200DD6D87 /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = et; path = et.lproj/Localizable.strings; sourceTree = "<group>"; };
+		4EAFE860212C20F200DD6D87 /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = et; path = et.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		4EAFE864212C21E900DD6D87 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Main.strings; sourceTree = "<group>"; };
+		4EAFE866212C21E900DD6D87 /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = et; path = et.lproj/Main.strings; sourceTree = "<group>"; };
 		4EEEB3E12B6AEC9B00138C48 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		4EF3230D20AC183E00809D13 /* EstEIDTokenNotify.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EstEIDTokenNotify.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EF3231820AC184000809D13 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -162,7 +170,8 @@
 		2F7767721CF5E08E0062B0A8 /* en.lproj */ = {
 			isa = PBXGroup;
 			children = (
-				4E77CCA32B5E85AB00518F62 /* Localizable.xcstrings */,
+				2F7767731CF5E0A00062B0A8 /* Localizable.strings */,
+				2F7767751CF5E0A00062B0A8 /* Localizable.stringsdict */,
 			);
 			name = en.lproj;
 			sourceTree = "<group>";
@@ -304,7 +313,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4E77CCA42B5E85AB00518F62 /* Localizable.xcstrings in Resources */,
+				2F7767771CF5E0A00062B0A8 /* Localizable.strings in Resources */,
+				2F7767781CF5E0A00062B0A8 /* Localizable.stringsdict in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -384,6 +394,26 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		2F7767731CF5E0A00062B0A8 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2F7767741CF5E0A00062B0A8 /* en */,
+				4EAFE85B212C20BE00DD6D87 /* ru */,
+				4EAFE85F212C20F200DD6D87 /* et */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		2F7767751CF5E0A00062B0A8 /* Localizable.stringsdict */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2F7767761CF5E0A00062B0A8 /* en */,
+				4EAFE85C212C20BE00DD6D87 /* ru */,
+				4EAFE860212C20F200DD6D87 /* et */,
+			);
+			name = Localizable.stringsdict;
+			sourceTree = "<group>";
+		};
 		4EF3231720AC184000809D13 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -453,8 +483,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.4.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -515,8 +545,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.4.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp --options=runtime";
 				SDKROOT = macosx;
