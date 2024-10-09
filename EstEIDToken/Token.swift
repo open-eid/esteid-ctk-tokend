@@ -24,7 +24,13 @@ import AppKit
 typealias TLV = TKBERTLVRecord
 
 extension TLV {
-    @objc convenience init(tag: UInt64, bigInt: Data) {
+    convenience init(tag: UInt64, bytes: [UInt8]) {
+        self.init(tag: tag, value: Data(bytes))
+    }
+    convenience init(tag: UInt64, tlv: TLV) {
+        self.init(tag: tag, value: tlv.data)
+    }
+    convenience init(tag: UInt64, bigInt: Data) {
         if let firstByte = bigInt.first,
            firstByte > 0x80 {
             self.init(tag: tag, value: [0x00] + bigInt)
@@ -57,8 +63,23 @@ extension TKSmartCard {
         }
     }
 
+    func send(ins: UInt8, p1: UInt8, p2: UInt8, tlv: TLV, le: Int? = nil) throws -> Data {
+        try sendCheck(ins: ins, p1: p1, p2: p2, data: tlv.data, le: le)
+    }
+
+    func send(ins: UInt8, p1: UInt8, p2: UInt8, records: [TLV], le: Int? = nil) throws -> Data {
+        let data = records.reduce(Data()) { partialResult, record in
+            partialResult + record.data
+        }
+        return try sendCheck(ins: ins, p1: p1, p2: p2, data: data, le: le)
+    }
+
+    func selectFile(p1: UInt8, p2: UInt8 = 0x0C, file: Data? = nil, le: Int? = nil) throws -> Data {
+        try sendCheck(ins: 0xA4, p1: p1, p2: p2, data: file, le: le)
+    }
+
     func selectFile(p1: UInt8, p2: UInt8 = 0x0C, file: UInt16, le: Int? = nil) throws -> Data {
-        try sendCheck(ins: 0xA4, p1: p1, p2: p2, data: withUnsafeBytes(of: file.bigEndian) { Data($0) }, le: le)
+        try selectFile(p1: p1, p2: p2, file: withUnsafeBytes(of: file.bigEndian) { Data($0) }, le: le)
     }
 
     func readFile(file: UInt16, le: Int = 0) throws -> Data {
@@ -90,10 +111,11 @@ extension TKSmartCard {
     }
 }
 
-class Token : TKSmartCardToken, TKTokenDelegate {
+
+class Token<T : TokenSession> : TKSmartCardToken, TKTokenDelegate {
     func createSession(_ token: TKToken) throws -> TKTokenSession {
         NSLog("Token createSessionWithError \(aid! as NSData)")
-        return IDEMIATokenSession(token: self)
+        return T(token: self)
     }
 
     func token(_ token: TKToken, terminateSession session: TKTokenSession) {
@@ -138,7 +160,7 @@ class Token : TKSmartCardToken, TKTokenDelegate {
     }
 }
 
-class IdemiaToken : Token {
+class IdemiaToken : Token<IdemiaTokenSession> {
     init(smartCard: TKSmartCard, aid AID: Data?, tokenDriver: TKSmartCardTokenDriver) throws {
         NSLog("IdemiaToken initWithSmartCard AID \(AID! as NSData)")
         do {
@@ -157,8 +179,26 @@ class IdemiaToken : Token {
     }
 }
 
+class ThalesToken : Token<ThalesTokenSession> {
+    init(smartCard: TKSmartCard, aid AID: Data?, tokenDriver: TKSmartCardTokenDriver) throws {
+        NSLog("ThalesToken initWithSmartCard AID \(AID! as NSData)")
+        do {
+            _ = try smartCard.selectFile(p1: 0x08, file: 0xDFDD)
+            let data = try smartCard.readFile(file: 0x5007)
+            let instanceID = String(decoding: data, as: UTF8.self)
+            NSLog("ThalesToken initWithSmartCard \(instanceID)")
+            _ = try smartCard.selectFile(p1: 0x08, file: 0xADF1)
+            try super.init(smartCard: smartCard, aid: AID, instanceID: instanceID, tokenDriver: tokenDriver, certificateID: 0x3411, keyID: 0x01)
+        } catch {
+            NSLog("ThalesToken initWithSmartCard failed to read card")
+            throw error
+        }
+    }
+}
+
+
 class EstEIDTokenDriver : TKSmartCardTokenDriver, TKSmartCardTokenDriverDelegate {
-    @objc static let ConstraintPIN: String = "PIN"
+    static let ConstraintPIN: String = "PIN"
 
     func tokenDriver(_ driver: TKSmartCardTokenDriver, createTokenFor smartCard: TKSmartCard, aid AID: Data?) throws -> TKSmartCardToken {
         let info = Bundle(for: EstEIDTokenDriver.self).infoDictionary
@@ -166,15 +206,13 @@ class EstEIDTokenDriver : TKSmartCardTokenDriver, TKSmartCardTokenDriverDelegate
         let build = info?["CFBundleVersion"] ?? 0
         NSLog("EstEIDTokenDriver createTokenForSmartCard AID \(AID! as NSData) version \(ver).\(build)")
         EstEIDTokenDriver.showNotification(nil)
+        if AID != nil && AID!.elementsEqual([0xA0, 0x00, 0x00, 0x00, 0x63, 0x50, 0x4B, 0x43, 0x53, 0x2D, 0x31, 0x35]) {
+            return try ThalesToken(smartCard: smartCard, aid: AID, tokenDriver: self)
+        }
         return try IdemiaToken(smartCard: smartCard, aid: AID, tokenDriver: self)
     }
 
-
-    @objc static func showNotification(_ title: String?) {
-        showNotification(title, subtitle: .init())
-    }
-
-    @objc static func showNotification(_ title: String?, subtitle: String) {
+    static func showNotification(_ title: String?, subtitle: String = .init()) {
         NSLog("EstEIDTokenDriver showNotification")
         let center = UNUserNotificationCenter.current()
 
