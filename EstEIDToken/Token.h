@@ -17,34 +17,14 @@
  *
  */
 
-#import <CryptoTokenKit/CryptoTokenKit.h>
 #import <CryptoTokenKit/TKSmartCardToken.h>
 
 NS_ASSUME_NONNULL_BEGIN
-
-#pragma mark EstEID implementation of TKToken classes
-
-#define NSDATA(LEN, ...) [NSData dataWithBytes:(const UInt8[]){__VA_ARGS__} length:LEN]
-
-static const TKTokenOperationConstraint EstEIDConstraintPIN = @"PIN";
-
-@interface EstEIDTokenDriver : TKSmartCardTokenDriver<TKSmartCardTokenDriverDelegate>
-+ (void)showNotification:(NSString*__nullable)msg;
-@end
-
-@interface Token : TKSmartCardToken<TKTokenDelegate>
-@end
-
-@interface IDEMIAToken : Token
-@end
 
 @interface TokenSession : TKSmartCardTokenSession<TKTokenSessionDelegate>
 @end
 
 @interface IDEMIATokenSession : TokenSession
-@end
-
-@interface AuthOperation : TKTokenSmartCardPINAuthOperation
 @end
 
 NS_ASSUME_NONNULL_END
