@@ -19,7 +19,12 @@
 
 #import "Token.h"
 
-#import <Security/SecAsn1Coder.h>
+#import <EstEIDToken-Swift.h>
+
+#define NSDATA(LEN, ...) [NSData dataWithBytes:(const UInt8[]){__VA_ARGS__} length:LEN]
+
+@interface AuthOperation : TKTokenSmartCardPINAuthOperation
+@end
 
 @interface TokenSession (EstEIDAuthOperation)
 - (void)closeSession;
@@ -64,14 +69,8 @@
     if ((sw & 0xff00) == 0x6300 || sw == 0x6983) {
         int triesLeft = sw == 0x6983 ? 0 : sw & 0x3f;
         NSLog(@"EstEIDAuthOperation finishWithError Failed to verify PIN sw:0x%04x retries: %d", sw, triesLeft);
-        if (@available(macOS 12, *)) {
-            if (triesLeft == 0) {
-                [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
-            }
-        } else {
-            [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
-        }
         if (triesLeft == 0) {
+            [EstEIDTokenDriver showNotification:[NSString localizedStringWithFormat:NSLocalizedString(@"VERIFY_TRY_LEFT", nil), triesLeft]];
             [session closeSession];
         }
         if (error != nil) {
@@ -132,7 +131,7 @@
 
 - (TKTokenAuthOperation *)tokenSession:(TKTokenSession *)session beginAuthForOperation:(TKTokenOperation)operation constraint:(TKTokenOperationConstraint)constraint error:(NSError **)error {
     NSLog(@"TokenSession beginAuthForOperation %@ constraint %@ isSessionActive %d", @(operation), constraint, isSessionActive);
-    if (![constraint isEqual:EstEIDConstraintPIN]) {
+    if (![constraint isEqual:EstEIDTokenDriver.ConstraintPIN]) {
         NSLog(@"TokenSession beginAuthForOperation attempt to evaluate unsupported constraint %@", constraint);
         if (error != nil) {
             *error = [NSError errorWithDomain:TKErrorDomain code:TKErrorCodeBadParameter userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"WRONG_CONSTR", nil)}];
@@ -306,32 +305,14 @@
         [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA384] ||
         [algorithm isAlgorithm:kSecKeyAlgorithmECDSASignatureDigestX962SHA512]) {
         NSLog(@"TokenSession encoding to ASN1 sequence %@", response);
-
-        typedef struct {
-            SecAsn1Item r;
-            SecAsn1Item s;
-        } ECDSA;
-
-        static const SecAsn1Template ECDSATemplate[] = {
-            { SEC_ASN1_SEQUENCE, 0, nil, sizeof(ECDSA) },
-            { SEC_ASN1_INTEGER, offsetof(ECDSA, r) },
-            { SEC_ASN1_INTEGER, offsetof(ECDSA, s) },
-            { 0 }
-        };
-
         uint8 *bytes = (uint8*)response.bytes;
-        ECDSA ecdsa = {
-            { response.length / 2, bytes },
-            { response.length / 2, bytes + (response.length / 2) },
-        };
-
-        SecAsn1CoderRef coder;
-        SecAsn1CoderCreate(&coder);
-        SecAsn1Item ber = {0, nil};
-        OSStatus ortn = SecAsn1EncodeItem(coder, &ecdsa, ECDSATemplate, &ber);
-        response = [NSData dataWithBytes:ber.Data length:ber.Length];
-        SecAsn1CoderRelease(coder);
-        NSLog(@"TokenSession SecAsn1EncodeItem %i %@", ortn, response);
+        TKBERTLVRecord *r = [[TKBERTLVRecord alloc] initWithTag:0x02 bigInt:
+                             [NSData dataWithBytesNoCopy:bytes length:response.length / 2 freeWhenDone:NO]];
+        TKBERTLVRecord *s = [[TKBERTLVRecord alloc] initWithTag:0x02 bigInt:
+                             [NSData dataWithBytesNoCopy:bytes + (response.length / 2) length:response.length / 2 freeWhenDone:NO]];
+        TKBERTLVRecord *seq = [[TKBERTLVRecord alloc] initWithTag:0x30 records:@[r, s]];
+        response = seq.data;
+        NSLog(@"TokenSession SecAsn1EncodeItem %@", response);
     }
     return response;
 }

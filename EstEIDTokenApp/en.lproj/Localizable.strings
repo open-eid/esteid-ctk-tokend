@@ -1,0 +1,7 @@
+/*
+ Localizable.strings
+ */
+
+"In case of questions please contact our support via https://www.id.ee" = "In case of questions please contact our support via https://www.id.ee";
+"Enable EstEIDTokenApp notifications to receive ID-card related notifications." = "Enable EstEIDTokenApp notifications to receive ID-card related notifications.";
+"Failed to send ID-card notification. To receive notifications,\nplease enable EstEIDTokenApp notifications in [System Settings](x-apple.systempreferences:com.apple.notifications) → Notifications." = "Failed to send ID-card notification. To receive notifications,\nplease enable EstEIDTokenApp notifications in [System Settings](x-apple.systempreferences:com.apple.notifications) → Notifications.";
