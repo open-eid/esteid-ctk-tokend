@@ -41,13 +41,7 @@ struct EstEidTokenApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .onAppear {
-                    NSWindow.allowsAutomaticWindowTabbing = false
-                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge, .timeSensitive]) { success, error in
-                        NSLog("EstEIDTokenNotify: requestAuthorizationWithOptions \(success) \(String(describing: error))")
-                    }
-                }
+            ContentView().onAppear { NSWindow.allowsAutomaticWindowTabbing = false }
         }
     }
 }
@@ -78,13 +72,18 @@ struct ContentView: View {
                 EmptyView()
             }
             Text("In case of questions please contact our support via https://www.id.ee")
-            Text("Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0").\(Bundle.main.infoDictionary?["CFBundleVersion"] as? Int ?? 0)")
+            Text("Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0").\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0")")
             TextEditor(text: .constant(text))
         }
         .padding()
         .task {
             notifications = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
-
+            if notifications != .authorized {
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge, .timeSensitive]) { success, error in
+                    NSLog("EstEIDTokenNotify: requestAuthorizationWithOptions \(success) \(String(describing: error))")
+                    notifications = success ? .authorized : .denied
+                }
+            }
             let pipe = Pipe()
             let task = Process()
             task.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
