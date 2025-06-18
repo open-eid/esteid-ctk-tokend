@@ -58,10 +58,10 @@ extension TKSmartCard {
     }
 
     func selectFile(p1: UInt8, p2: UInt8 = 0x0C, file: UInt16, le: Int? = nil) throws -> Data {
-        return try sendCheck(ins: 0xA4, p1: p1, p2: p2, data: withUnsafeBytes(of: file.bigEndian) { Data($0) }, le: le)
+        try sendCheck(ins: 0xA4, p1: p1, p2: p2, data: withUnsafeBytes(of: file.bigEndian) { Data($0) }, le: le)
     }
 
-    func readFile(file: UInt16) throws -> Data {
+    func readFile(file: UInt16, le: Int = 0) throws -> Data {
         guard let fci = TLV(from: try selectFile(p1: 0x02, p2: 0x04, file: file, le: 0)) else {
             NSLog("EstEIDToken readBinary failed to parse FCI record")
             throw TKError(.corruptedData)
@@ -77,16 +77,14 @@ extension TKSmartCard {
             throw TKError(.corruptedData)
         }
 
-        var pos: UInt16 = 0
+        var data = Data()
         do {
-            var data = Data()
             while data.count < size {
-                pos = UInt16(data.count)
-                data.append(try sendCheck(ins: 0xB0, p1: UInt8(pos >> 8), p2: UInt8(truncatingIfNeeded: pos), le: 0))
+                data.append(try sendCheck(ins: 0xB0, p1: UInt8(data.count >> 8), p2: UInt8(truncatingIfNeeded: data.count), le: min(le, Int(size) - data.count)))
             }
             return data
         } catch {
-            NSLog("EstEIDToken readBinary failed to read binary at pos \(pos)")
+            NSLog("EstEIDToken readBinary failed to read binary at pos \(data.count)")
             throw error
         }
     }
@@ -111,7 +109,7 @@ class Token : TKSmartCardToken, TKTokenDelegate {
 
         let certificateData: Data
         do {
-            certificateData = try smartCard.readFile(file: certificateID)
+            certificateData = try smartCard.readFile(file: certificateID, le: 0xC0)
         } catch {
             NSLog("Token initWithSmartCard failed to read certificate")
             throw TKError(.corruptedData)
@@ -173,7 +171,7 @@ class EstEIDTokenDriver : TKSmartCardTokenDriver, TKSmartCardTokenDriverDelegate
 
 
     @objc static func showNotification(_ title: String?) {
-        showNotification(title, subtitle: String())
+        showNotification(title, subtitle: .init())
     }
 
     @objc static func showNotification(_ title: String?, subtitle: String) {
@@ -189,7 +187,7 @@ class EstEIDTokenDriver : TKSmartCardTokenDriver, TKSmartCardTokenDriverDelegate
             path.deleteLastPathComponent()
             NSLog("EstEIDTokenDriver showNotification path: \(path)")
             NSWorkspace.shared.openApplication(at: path, configuration: NSWorkspace.OpenConfiguration()) { app, error in
-                NSLog("EstEIDTokenDriver showNotification openApplicationAtURL: (error)")
+                NSLog("EstEIDTokenDriver showNotification openApplicationAtURL: \(error?.localizedDescription ?? "")")
             }
         }
 
@@ -203,7 +201,7 @@ class EstEIDTokenDriver : TKSmartCardTokenDriver, TKSmartCardTokenDriverDelegate
         ui.interruptionLevel = .timeSensitive
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: ui, trigger: nil)
         center.add(request) { error in
-            NSLog("EstEIDTokenNotify: addNotificationRequest \(String(describing: error))")
+            NSLog("EstEIDTokenNotify: addNotificationRequest \(error?.localizedDescription ?? "")")
         }
     }
 }
