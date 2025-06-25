@@ -25,10 +25,9 @@
 		2F38839D1CF46C6E00F114A7 /* EstEidTokenApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F38839C1CF46C6E00F114A7 /* EstEidTokenApp.swift */; };
 		2F3883A21CF46C6E00F114A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F3883A11CF46C6E00F114A7 /* Assets.xcassets */; };
 		2F3883BF1CF46C9D00F114A7 /* EstEIDToken.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2F3883B01CF46C9D00F114A7 /* EstEIDToken.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		2F3883C51CF46D6F00F114A7 /* TokenSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F3883C41CF46D6F00F114A7 /* TokenSession.m */; };
 		2F7767771CF5E0A00062B0A8 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2F7767731CF5E0A00062B0A8 /* Localizable.strings */; };
 		2F7767781CF5E0A00062B0A8 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 2F7767751CF5E0A00062B0A8 /* Localizable.stringsdict */; };
-		4E1313742DB975740075D737 /* Token.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F3883B71CF46C9D00F114A7 /* Token.h */; };
+		4E7888CB2CB6AD5700399626 /* TokenSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7888CA2CB6AD5100399626 /* TokenSession.swift */; };
 		4E931BC22DCDD0E30090DCED /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4E931BBE2DCDD0E30090DCED /* Localizable.strings */; };
 		4EE0CACA2CB68FCE00B2BC1E /* Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE0CAC92CB68FC400B2BC1E /* Token.swift */; };
 /* End PBXBuildFile section */
@@ -70,13 +69,12 @@
 		2F3883A11CF46C6E00F114A7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2F3883B01CF46C9D00F114A7 /* EstEIDToken.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EstEIDToken.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F3883B61CF46C9D00F114A7 /* EstEIDToken.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EstEIDToken.entitlements; sourceTree = "<group>"; };
-		2F3883B71CF46C9D00F114A7 /* Token.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Token.h; sourceTree = "<group>"; };
 		2F3883BC1CF46C9D00F114A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2F3883C41CF46D6F00F114A7 /* TokenSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TokenSession.m; sourceTree = "<group>"; };
 		2F7767741CF5E0A00062B0A8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		2F7767761CF5E0A00062B0A8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		4E23C1492DCDDEF900FA4F3F /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		4E23C14A2DCDDF0B00FA4F3F /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
+		4E7888CA2CB6AD5100399626 /* TokenSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenSession.swift; sourceTree = "<group>"; };
 		4E931BBD2DCDD0E30090DCED /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4E931BD22DCDD1C80090DCED /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = et; path = et.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4E931BD32DCDD1CA0090DCED /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -125,9 +123,8 @@
 			children = (
 				2F7767731CF5E0A00062B0A8 /* Localizable.strings */,
 				2F7767751CF5E0A00062B0A8 /* Localizable.stringsdict */,
-				2F3883B71CF46C9D00F114A7 /* Token.h */,
-				2F3883C41CF46D6F00F114A7 /* TokenSession.m */,
 				4EE0CAC92CB68FC400B2BC1E /* Token.swift */,
+				4E7888CA2CB6AD5100399626 /* TokenSession.swift */,
 				2F3883BC1CF46C9D00F114A7 /* Info.plist */,
 				2F3883B61CF46C9D00F114A7 /* EstEIDToken.entitlements */,
 			);
@@ -135,17 +132,6 @@
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
-
-/* Begin PBXHeadersBuildPhase section */
-		4E1313732DB9756C0075D737 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				4E1313742DB975740075D737 /* Token.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		2F3883971CF46C6E00F114A7 /* EstEIDTokenApp */ = {
@@ -170,7 +156,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2F3883C01CF46C9D00F114A7 /* Build configuration list for PBXNativeTarget "EstEIDToken" */;
 			buildPhases = (
-				4E1313732DB9756C0075D737 /* Headers */,
 				2F3883AC1CF46C9D00F114A7 /* Sources */,
 				2F3883AE1CF46C9D00F114A7 /* Resources */,
 			);
@@ -281,7 +266,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2F3883C51CF46D6F00F114A7 /* TokenSession.m in Sources */,
+				4E7888CB2CB6AD5700399626 /* TokenSession.swift in Sources */,
 				4EE0CACA2CB68FCE00B2BC1E /* Token.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -375,6 +360,7 @@
 				CURRENT_PROJECT_VERSION = 0;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -393,7 +379,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.6.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -444,6 +430,8 @@
 				CURRENT_PROJECT_VERSION = 0;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = ET847QJV9F;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -457,8 +445,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 1.5.0;
-				OTHER_CODE_SIGN_FLAGS = "--timestamp --options=runtime";
+				MARKETING_VERSION = 1.6.0;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -515,7 +502,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp.EstEIDToken;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = EstEIDToken/Token.h;
 			};
 			name = Debug;
 		};
@@ -534,7 +520,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp.EstEIDToken;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = EstEIDToken/Token.h;
 			};
 			name = Release;
 		};

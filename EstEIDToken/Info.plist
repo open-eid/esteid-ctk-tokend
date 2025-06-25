@@ -9,6 +9,7 @@
 			<key>com.apple.ctk.aid</key>
 			<array>
 				<string>A000000077010800070000FE00000100</string>
+				<string>A000000063504B43532D3135</string>
 			</array>
 			<key>com.apple.ctk.class-id</key>
 			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
