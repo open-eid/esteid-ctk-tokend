@@ -1,0 +1,70 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Enable EstEIDTokenApp notifications to receive ID-card related notifications." : {
+      "localizations" : {
+        "et" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID-kaardiga seotud teavituste saamiseks luba EstEIDTokenApp teavitused."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для получения уведомлений, связанных с ID-картой, разрешите уведомления для приложения EstEIDTokenApp."
+          }
+        }
+      }
+    },
+    "Failed to send ID-card notification. To receive notifications,\nplease enable EstEIDTokenApp notifications in [System Settings](x-apple.systempreferences:com.apple.notifications) → Notifications." : {
+      "localizations" : {
+        "et" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID-kaardiga seotud teavituse saatmine ebaõnnestus. Teavituste saamiseks\nlubage EstEIDTokenApp teavitused [System Settings](x-apple.systempreferences:com.apple.notifications) → Notifications seadetes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для получения уведомлений разрешите уведомления EstEIDTokenApp\nв настройках: [Системные Настройки](x-apple.systempreferences:com.apple.notifications) → Уведомления."
+          }
+        }
+      }
+    },
+    "In case of questions please contact our support via https://www.id.ee" : {
+      "localizations" : {
+        "et" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Küsimuste korral pöörduge https://www.id.ee"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если у вас возникнут вопросы, пожалуйста, обратитесь на https://www.id.ee"
+          }
+        }
+      }
+    },
+    "Version: %@.%@" : {
+      "localizations" : {
+        "et" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versioon: %@.%@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия: %@.%@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
