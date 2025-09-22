@@ -99,6 +99,7 @@ extension TKSmartCard {
         }
 
         var data = Data()
+        data.reserveCapacity(Int(size))
         do {
             while data.count < size {
                 data.append(try sendCheck(ins: 0xB0, p1: UInt8(data.count >> 8), p2: UInt8(truncatingIfNeeded: data.count), le: min(le, Int(size) - data.count)))
@@ -120,9 +121,6 @@ class Token<T : TokenSession> : TKSmartCardToken, TKTokenDelegate {
 
     func token(_ token: TKToken, terminateSession session: TKTokenSession) {
         NSLog("Token terminateSession")
-        if let sess = session as? TokenSession {
-            sess.smartCard.isSensitive = false
-        }
     }
 
     init(smartCard: TKSmartCard, aid AID: Data?, instanceID: String, tokenDriver: TKSmartCardTokenDriver, certificateID: UInt16, keyID: UInt8) throws {
@@ -144,12 +142,12 @@ class Token<T : TokenSession> : TKSmartCardToken, TKTokenDelegate {
             NSLog("Token initWithSmartCard failed to create certificate item")
             throw TKError(.corruptedData)
         }
-        certificateItem.setName(NSLocalizedString("AUTH_CERT", comment: "Cert label"))
+        certificateItem.setName("Certificate For Card Authentication")
         guard let keyItem = TKTokenKeychainKey(certificate: certificate, objectID: keyID) else {
             NSLog("Token initWithSmartCard failed to create key item")
             throw TKError(.corruptedData)
         }
-        keyItem.setName(NSLocalizedString("AUTH_KEY", comment: "Key label"))
+        keyItem.setName("Key For Card Authentication")
         keyItem.canSign = true
         keyItem.canDecrypt = false
         keyItem.isSuitableForLogin = false

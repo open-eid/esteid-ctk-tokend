@@ -1,8 +1,0 @@
-/*
- Localizable.strings
- CryptoTokenKit
- */
-
-"In case of questions please contact our support via https://www.id.ee" = "Если у вас возникнут вопросы, пожалуйста, обратитесь на https://www.id.ee";
-"Enable EstEIDTokenApp notifications to receive ID-card related notifications." = "Для получения уведомлений, связанных с ID-картой, разрешите уведомления для приложения EstEIDTokenApp.";
-"Failed to send ID-card notification. To receive notifications,\nplease enable EstEIDTokenApp notifications in [System Settings](x-apple.systempreferences:com.apple.notifications) → Notifications." = "Для получения уведомлений разрешите уведомления EstEIDTokenApp\nв настройках: [Системные Настройки](x-apple.systempreferences:com.apple.notifications) → Уведомления.";
