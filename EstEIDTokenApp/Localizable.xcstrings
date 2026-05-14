@@ -8,12 +8,6 @@
             "state" : "translated",
             "value" : "ID-kaardiga seotud teavituste saamiseks luba EstEIDTokenApp teavitused."
           }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Для получения уведомлений, связанных с ID-картой, разрешите уведомления для приложения EstEIDTokenApp."
-          }
         }
       }
     },
@@ -23,12 +17,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ID-kaardiga seotud teavituse saatmine ebaõnnestus. Teavituste saamiseks\nlubage EstEIDTokenApp teavitused [System Settings](x-apple.systempreferences:com.apple.notifications) → Notifications seadetes."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Для получения уведомлений разрешите уведомления EstEIDTokenApp\nв настройках: [Системные Настройки](x-apple.systempreferences:com.apple.notifications) → Уведомления."
           }
         }
       }
@@ -40,12 +28,6 @@
             "state" : "translated",
             "value" : "Küsimuste korral pöörduge https://www.id.ee"
           }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Если у вас возникнут вопросы, пожалуйста, обратитесь на https://www.id.ee"
-          }
         }
       }
     },
@@ -55,12 +37,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Versioon: %@.%@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Версия: %@.%@"
           }
         }
       }

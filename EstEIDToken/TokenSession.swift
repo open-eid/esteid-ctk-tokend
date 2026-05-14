@@ -50,23 +50,23 @@ class AuthOperation: TKTokenSmartCardPINAuthOperation {
     override func finish() throws {
         NSLog("AuthOperation finish")
 
-        guard pin != nil && smartCard != nil else {
+        guard let pin, let smartCard else {
             NSLog("AuthOperation finish invalid condition")
             throw TKError(.canceledByUser)
         }
 
-        if pin!.count < pinFormat.minPINLength ||
-           pin!.count > pinFormat.maxPINLength ||
-           !isAllDigits(pin!) {
-            NSLog("AuthOperation finish invalid PIN length: \(pin!.count) min: \(pinFormat.minPINLength) max: \(pinFormat.maxPINLength)")
+        if pin.count < pinFormat.minPINLength ||
+           pin.count > pinFormat.maxPINLength ||
+           !isAllDigits(pin) {
+            NSLog("AuthOperation finish invalid PIN length: \(pin.count) min: \(pinFormat.minPINLength) max: \(pinFormat.maxPINLength)")
             let msg = String(localized: "Invalid PIN entered")
             EstEIDTokenDriver.showNotification(msg)
             throw NSError(domain: TKErrorDomain, code: TKError.Code.authenticationFailed.rawValue, userInfo: [NSLocalizedDescriptionKey: msg])
         }
 
         var pinData = Data(repeating: session.fillChar, count: pinFormat.pinBlockByteLength)
-        pinData.replaceSubrange(0..<pin!.count, with: pin!.utf8)
-        switch try? smartCard!.send(ins: 0x20, p1: 0x00, p2: session.pinId, data: pinData) {
+        pinData.replaceSubrange(0..<pin.count, with: pin.utf8)
+        switch try? smartCard.send(ins: 0x20, p1: 0x00, p2: session.pinId, data: pinData) {
         case (0x9000, _)?:
             NSLog("AuthOperation finish success")
             return

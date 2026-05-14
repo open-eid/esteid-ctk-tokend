@@ -54,8 +54,8 @@ extension TKSmartCard {
     func sendCheck(ins: UInt8, p1: UInt8, p2: UInt8, data: Data? = nil, le: Int? = nil) throws -> Data {
         switch try? send(ins: ins, p1: p1, p2: p2, data: data, le: le) {
         case (0x9000, let data)?: return data
-        case (let sw, _)?:
-            NSLog("EstEIDToken sendCheck failed: \((data ?? Data()) as NSData) sw: \(String(format: "%04X", sw))")
+        case (let sw, let result)?:
+            NSLog("EstEIDToken sendCheck failed: \(result as NSData) sw: \(String(format: "%04X", sw))")
             throw TKError(.objectNotFound)
         default:
             NSLog("EstEIDToken sendCheck failed: \((data ?? Data()) as NSData)")
