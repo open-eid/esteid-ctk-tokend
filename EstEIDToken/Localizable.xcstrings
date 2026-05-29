@@ -8,12 +8,6 @@
             "state" : "translated",
             "value" : "Sisestati ebakorrektne PIN"
           }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid PIN entered"
-          }
         }
       }
     },
@@ -23,12 +17,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Palun sisestada PIN kaardilugeja sõrmistikult"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пожалуйста, введите PIN-код на PinPAD"
           }
         }
       }
@@ -78,30 +66,6 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "PIN on lukus.\nTühista blokeering, et PIN-i taas kasutada."
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Неверный PIN.\nPIN будет заблокирован при следующей неудачной попытке"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Неправильный PIN.\nОсталось %d попыток"
-                }
-              },
-              "zero" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "PIN заблокирован.\nРазблокируйте его для повторного использования PIN."
                 }
               }
             }
