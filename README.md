@@ -1,6 +1,6 @@
 # esteid-ctk-tokend
 
- * License: LGPL 2.1
+ * License: LGPL-2.1-or-later
  * &copy; Estonian Information System Authority
  * [Architecture of ID-software](http://open-eid.github.io)
 
@@ -24,12 +24,16 @@
 
         xcodebuild -project EstEIDTokenApp.xcodeproj build
 
- 4. Usage
+ 4. Build installer package
+
+        xcodebuild -project EstEIDTokenApp.xcodeproj -target package CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO install
+
+ 5. Usage
 
         Execute blank "EstEIDTokenApp.app" application and it registers the extension.
         Open Safari and use site with client certificate requirement.
 
- 5. Debug
+ 6. Debug
 
         Open Console.app and filter EstEID logs
         Load extension
