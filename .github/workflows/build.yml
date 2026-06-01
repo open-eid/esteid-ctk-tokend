@@ -11,12 +11,17 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: Build
-      run: xcodebuild -project EstEIDTokenApp.xcodeproj -target package CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO DSTROOT=$PWD/tmp CURRENT_PROJECT_VERSION=${{ github.run_number }} install
-    - name: Archive artifacts
+      run: xcodebuild -project EstEIDTokenApp.xcodeproj -target package CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CURRENT_PROJECT_VERSION=${{ github.run_number }} install
+    - name: Archive pkg artifact
       uses: actions/upload-artifact@v7
       with:
         name: pkg
         path: ./*.pkg
+    - name: Archive SBOM artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: sbom
+        path: ./*.spdx.json
   copyright:
     name: Check copyright headers
     uses: open-eid/.github/.github/workflows/copyright.yml@b2d87c7447ebcc01beb54c84f3978a81c1d64877 # master
