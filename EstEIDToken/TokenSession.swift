@@ -217,7 +217,10 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
             throw TKError(.tokenNotFound)
         }
         defer { closeSession() }
-        switch try signData(keyId: keyObjectID as! UInt8, sign: dataToSign) {
+        guard let keyId = keyObjectID as? UInt8 else {
+            throw TKError(.badParameter)
+        }
+        switch try signData(keyId: keyId, sign: dataToSign) {
         case (0x9000, let data):
             NSLog("TokenSession sign success: \(data as NSData)")
             let der: Data
@@ -291,7 +294,15 @@ class ThalesTokenSession : TokenSession {
     }
 
     override func signData(keyId: UInt8, sign dataToSign: Data) throws -> (UInt16, Data) {
-        let algo = UInt8(dataToSign.count) + 0x20 + 0x04
+        let algo: UInt8
+        switch dataToSign.count {
+        case 32: algo = 0x44 // SHA-256
+        case 48: algo = 0x54 // SHA-384
+        case 64: algo = 0x64 // SHA-512
+        default:
+            NSLog("ThalesTokenSession signData unsupported digest length \(dataToSign.count)")
+            throw TKError(.badParameter)
+        }
         NSLog("ThalesTokenSession signData \(String(format: "%02X", keyId)) \(String(format: "%02X", algo))")
         _ = try smartCard.send(ins: 0x22, p1: 0x41, p2: 0xB6, records: [
             TLV(tag: 0x80, bytes: [algo]),
