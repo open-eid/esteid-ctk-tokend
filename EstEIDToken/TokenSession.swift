@@ -27,30 +27,36 @@ class AuthOperation: TKTokenSmartCardPINAuthOperation {
         NSLog("AuthOperation deinit")
     }
 
-    private func isAllDigits(_ data: String) -> Bool {
-        let nonNumbers = CharacterSet.decimalDigits.inverted
-        return data.rangeOfCharacter(from: nonNumbers) == nil && !data.isEmpty
+    // Best effort: the framework-owned PIN String and APDU buffers cannot be wiped
+    private static func wipe(_ buffer: UnsafeMutableRawBufferPointer) {
+        guard let baseAddress = buffer.baseAddress else { return }
+        _ = memset_s(baseAddress, buffer.count, 0, buffer.count)
     }
 
     override func finish() throws {
         NSLog("AuthOperation finish")
 
+        let pin = self.pin
+        self.pin = nil
         guard let pin, let smartCard else {
             NSLog("AuthOperation finish invalid condition")
             throw TKError(.canceledByUser)
         }
 
-        if pin.count < pinFormat.minPINLength ||
-           pin.count > pinFormat.maxPINLength ||
-           !isAllDigits(pin) {
-            NSLog("AuthOperation finish invalid PIN length: \(pin.count) min: \(pinFormat.minPINLength) max: \(pinFormat.maxPINLength)")
+        var pinBytes = Array(pin.utf8)
+        defer { pinBytes.withUnsafeMutableBytes(Self.wipe) }
+        guard pinBytes.count >= pinFormat.minPINLength,
+              pinBytes.count <= min(pinFormat.maxPINLength, pinFormat.pinBlockByteLength),
+              pinBytes.allSatisfy({ (0x30...0x39).contains($0) }) else {
+            NSLog("AuthOperation finish invalid PIN length: \(pinBytes.count) min: \(pinFormat.minPINLength) max: \(pinFormat.maxPINLength)")
             let msg = String(localized: "Invalid PIN entered")
             EstEIDTokenDriver.showNotification(msg)
             throw NSError(domain: TKErrorDomain, code: TKError.Code.authenticationFailed.rawValue, userInfo: [NSLocalizedDescriptionKey: msg])
         }
 
         var pinData = Data(repeating: session.fillChar, count: pinFormat.pinBlockByteLength)
-        pinData.replaceSubrange(0..<pin.count, with: pin.utf8)
+        defer { pinData.withUnsafeMutableBytes(Self.wipe) }
+        pinData.replaceSubrange(0..<pinBytes.count, with: pinBytes)
         switch try? smartCard.send(ins: 0x20, p1: 0x00, p2: session.pinId, data: pinData) {
         case (0x9000, _)?:
             NSLog("AuthOperation finish success")
@@ -133,6 +139,7 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
         }
 
         let tokenAuth = AuthOperation(smartCard: smartCard, tokenSession: self)
+        // OMNIKEY readers wrongly report PIN pad support (hardware issue, reappeared with Apple's own CCID driver)
         if smartCard.slot.name.contains("HID Global OMNIKEY") {
             NSLog("TokenSession beginAuthFor '\(smartCard.slot.name)' is not a PinPad reader")
             return tokenAuth
