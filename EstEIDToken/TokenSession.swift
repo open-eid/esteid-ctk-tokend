@@ -40,6 +40,7 @@ class AuthOperation: TKTokenSmartCardPINAuthOperation {
         self.pin = nil
         guard let pin, let smartCard else {
             NSLog("AuthOperation finish invalid condition")
+            session.closeSession()
             throw TKError(.canceledByUser)
         }
 
@@ -57,9 +58,14 @@ class AuthOperation: TKTokenSmartCardPINAuthOperation {
         var pinData = Data(repeating: session.fillChar, count: pinFormat.pinBlockByteLength)
         defer { pinData.withUnsafeMutableBytes(Self.wipe) }
         pinData.replaceSubrange(0..<pinBytes.count, with: pinBytes)
+        // Hold the card only from VERIFY to the end of the auth window: a cancelled dialog never calls finish()
+        guard session.beginSession(smartCard) else {
+            throw TKError(.communicationError)
+        }
         switch try? smartCard.send(ins: 0x20, p1: 0x00, p2: session.pinId, data: pinData) {
         case (0x9000, _)?:
             NSLog("AuthOperation finish success")
+            session.authenticated(smartCard)
             return
         case (0x6983, _)?, (0x63C0, _)?:
             NSLog("AuthOperation finish Failed to verify PIN blocked")
@@ -68,7 +74,8 @@ class AuthOperation: TKTokenSmartCardPINAuthOperation {
             let triesLeft = Int(sw & 0x000f)
             NSLog("AuthOperation finish Failed to verify PIN sw: 0x\(String(format: "%04x", sw)) retries: \(triesLeft)")
             let msg = String(format: String(localized: "VERIFY_TRY_LEFT"), triesLeft)
-            // Do not close session, It will retry
+            // Release the card while the dialog asks again; the retry calls finish() again, a cancel does not
+            session.closeSession()
             throw NSError(domain: TKErrorDomain, code: TKError.Code.authenticationFailed.rawValue, userInfo: [NSLocalizedDescriptionKey: msg])
         case (let sw, _)?:
             NSLog("AuthOperation finish Failed to verify PIN sw: 0x\(String(format: "%04x", sw))")
@@ -84,8 +91,21 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
     var pinId: UInt8 = 0x01
     var fillChar: UInt8 = 0xFF
 
+    // PIN stays verified for this session while signatures keep arriving (e.g. Safari signs twice per TLS login),
+    // then it is devalidated before the card is released, so the verified state never reaches another card user
+    private static let authWindow: TimeInterval = 2
+    private static let maxAuthWindow: TimeInterval = 30
+
+    private enum CardState {
+        case idle
+        case held(TKSmartCard)
+        case verified(TKSmartCard, deadline: Date)
+    }
+
     private var hasFailedAttempt = false
-    private var isSessionActive = false
+    private var cardState = CardState.idle
+    private var releaseGeneration = 0
+    private let lock = NSLock()
 
     required override init(token: TKToken) {
         NSLog("TokenSession init")
@@ -94,14 +114,84 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
 
     deinit {
         NSLog("TokenSession deinit")
+        // Fail-safe, the auth window timer normally keeps the session alive until release()
+        switch cardState {
+        case .idle:
+            break
+        case let .held(card), let .verified(card, _):
+            card.endSession()
+        }
+    }
+
+    func authenticated(_ card: TKSmartCard) {
+        lock.withLock {
+            NSLog("TokenSession authenticated")
+            cardState = .verified(card, deadline: Date(timeIntervalSinceNow: Self.maxAuthWindow))
+            scheduleRelease()
+        }
+    }
+
+    func beginSession(_ card: TKSmartCard) -> Bool {
+        if lock.withLock({
+            if case .idle = cardState { return false }
+            return true
+        }) {
+            return true
+        }
+        let semaphore = DispatchSemaphore(value: 0)
+        var began = false
+        card.beginSession { result, error in
+            NSLog("TokenSession beginSession \(result) \(String(describing: error))")
+            began = result
+            semaphore.signal()
+        }
+        semaphore.wait()
+        if began {
+            lock.withLock { cardState = .held(card) }
+        }
+        return began
     }
 
     func closeSession() {
-        NSLog("TokenSession closeSession isSessionActive \(isSessionActive)")
-        if isSessionActive {
-            smartCard.endSession()
+        lock.withLock { release() }
+    }
+
+    // Caller holds lock
+    private func scheduleRelease() {
+        guard case let .verified(_, deadline) = cardState else { return }
+        releaseGeneration += 1
+        let generation = releaseGeneration
+        let delay = min(Self.authWindow, deadline.timeIntervalSinceNow)
+        DispatchQueue.global().asyncAfter(deadline: .now() + max(delay, 0)) { [self] in
+            lock.withLock {
+                guard generation == releaseGeneration else { return }
+                NSLog("TokenSession auth window expired")
+                release()
+            }
         }
-        isSessionActive = false
+    }
+
+    // Caller holds lock
+    private func release() {
+        NSLog("TokenSession release")
+        releaseGeneration += 1
+        let card: TKSmartCard
+        switch cardState {
+        case .idle:
+            return
+        case let .held(heldCard), let .verified(heldCard, _):
+            card = heldCard
+        }
+        // Devalidate PIN after any authentication attempt (VERIFY response may have been lost).
+        // isSensitive is a last resort only: once set during a token request it keeps resetting the card on hand-off
+        // even after being cleared, which breaks other applications' card sessions (IB-8374)
+        let devalidated = (try? card.send(ins: 0x20, p1: 0xFF, p2: pinId))?.sw == 0x9000
+        if !devalidated, case .verified = cardState {
+            NSLog("TokenSession release failed to devalidate PIN, marking card sensitive")
+            card.isSensitive = true
+        }
+        card.endSession()
+        cardState = .idle
     }
 
     func triesLeft() throws -> UInt8 {
@@ -128,16 +218,6 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
             throw TKError(.canceledByUser)
         }
 
-        let semaphore = DispatchSemaphore(value: 0)
-        if !isSessionActive {
-            smartCard.beginSession() { result, error in
-                NSLog("TokenSession beginAuthFor beginSession \(result) \(String(describing: error))")
-                self.isSessionActive = result
-                semaphore.signal()
-            }
-            semaphore.wait()
-        }
-
         let tokenAuth = AuthOperation(smartCard: smartCard, tokenSession: self)
         // OMNIKEY readers wrongly report PIN pad support (hardware issue, reappeared with Apple's own CCID driver)
         if smartCard.slot.name.contains("HID Global OMNIKEY") {
@@ -152,44 +232,69 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
             NSLog("TokenSession beginAuthFor '\(smartCard.slot.name)' is regular reader")
             return tokenAuth
         }
+        return try authenticateWithPINPad(pinpad, triesLeft: triesLeft)
+    }
 
+    private func authenticateWithPINPad(_ pinpad: TKSmartCardUserInteractionForSecurePINVerification, triesLeft: UInt8) throws -> TKTokenAuthOperation {
+        // Keypad entry holds the card and cannot be cancelled from software, only these timeouts end it.
+        // ifd-ccid ignores interactionTimeout (reader default applies)
+        pinpad.initialTimeout = 30
+        pinpad.interactionTimeout = 15
         pinpad.pinMessageIndices = [0]
+        let card = smartCard
+        guard beginSession(card) else {
+            throw TKError(.communicationError)
+        }
         EstEIDTokenDriver.showNotification(
             String(localized: "Please enter PIN code on PinPAD"),
             subtitle: hasFailedAttempt ? String(format: String(localized: "VERIFY_TRY_LEFT"), triesLeft) : .init())
-
-        var result: Error?
-        pinpad.run { isRunning, error in
-            NSLog("TokenSession beginAuthFor PINPad completed \(isRunning) \(String(describing: error)) \(String(format: "%04X", pinpad.resultSW))")
-            if isRunning {
-                switch pinpad.resultSW {
-                case 0x9000:
-                    EstEIDTokenDriver.showNotification(nil)
-                case 0x6983, 0x63C0:
-                    self.hasFailedAttempt = false
-                    EstEIDTokenDriver.showNotification(String(format: String(localized: "VERIFY_TRY_LEFT"), 0))
-                    result = TKError(.canceledByUser)
-                case let sw where (sw & 0xfff0) == 0x63C0:
-                    let triesLeft = Int(sw & 0x000f)
-                    self.hasFailedAttempt = true
-                    EstEIDTokenDriver.showNotification(String(format: String(localized: "VERIFY_TRY_LEFT"), triesLeft))
-                    // Do not throw error here, sign will then re-trigger beginAuthFor
-                case 0x6400, 0x6401: // Timeout, Cancel
-                    result = TKError(.canceledByUser)
-                default:
-                    result = TKError(.canceledByUser)
-                }
-            } else {
-                result = TKError(.canceledByUser)
-            }
+        // The reply only records the outcome, so a late reply after a timeout cannot change the session state
+        var reply: (success: Bool, error: Error?)?
+        let semaphore = DispatchSemaphore(value: 0)
+        pinpad.run { success, error in
+            self.lock.withLock { reply = (success, error) }
             semaphore.signal()
         }
-        semaphore.wait()
-        if let result {
-            self.closeSession()
-            throw result
+        // Last resort if the reply never arrives, longer than ifd-ccid's own minimum 90 s read timeout
+        let completed = semaphore.wait(timeout: .now() + 100) == .success
+        EstEIDTokenDriver.showNotification(nil)
+        guard completed, let reply = lock.withLock({ reply }) else {
+            NSLog("TokenSession beginAuthFor PINPad did not complete in 100s")
+            closeSession()
+            throw TKError(.canceledByUser)
         }
-        return TKTokenAuthOperation()
+        NSLog("TokenSession beginAuthFor PINPad completed \(reply.success) \(String(describing: reply.error)) \(String(format: "%04X", pinpad.resultSW))")
+        guard reply.success else {
+            // Entry did not complete: Cancel, timeout, card or reader removal. Apple's CCID driver reports these
+            // without a status word and an uninformative error (nil on macOS 26, CryptoTokenKit -3 on macOS 27)
+            closeSession()
+            throw TKError(.canceledByUser)
+        }
+
+        switch pinpad.resultSW {
+        case 0x9000:
+            hasFailedAttempt = false
+            authenticated(card)
+            return TKTokenAuthOperation()
+        case 0x6983, 0x63C0:
+            hasFailedAttempt = false
+            EstEIDTokenDriver.showNotification(String(format: String(localized: "VERIFY_TRY_LEFT"), 0))
+            closeSession()
+            throw TKError(.canceledByUser)
+        case let sw where (sw & 0xfff0) == 0x63C0:
+            let triesLeft = Int(sw & 0x000f)
+            hasFailedAttempt = true
+            EstEIDTokenDriver.showNotification(String(format: String(localized: "VERIFY_TRY_LEFT"), triesLeft))
+            // Wrong PIN: release the card until sign re-triggers beginAuthFor
+            closeSession()
+            return TKTokenAuthOperation()
+        case 0x6400, 0x6401: // Timeout, Cancel
+            closeSession()
+            throw TKError(.canceledByUser)
+        default:
+            closeSession()
+            throw reply.error ?? TKError(.canceledByUser)
+        }
     }
 
     #if hasAttribute(diagnose)
@@ -223,11 +328,29 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
         guard let keyItem = try? token.keychainContents?.key(forObjectID: keyObjectID) else {
             throw TKError(.tokenNotFound)
         }
-        defer { closeSession() }
         guard let keyId = keyObjectID as? UInt8 else {
             throw TKError(.badParameter)
         }
-        switch try signData(keyId: keyId, sign: dataToSign) {
+        let response = try lock.withLock {
+            // PIN verified by another session must not be reused
+            guard case let .verified(_, deadline) = cardState else {
+                NSLog("TokenSession sign not authenticated")
+                throw TKError(.authenticationNeeded)
+            }
+            do {
+                let response = try signData(keyId: keyId, sign: dataToSign)
+                if response.0 == 0x9000 && deadline.timeIntervalSinceNow > 0 {
+                    scheduleRelease()
+                } else {
+                    release()
+                }
+                return response
+            } catch {
+                release()
+                throw error
+            }
+        }
+        switch response {
         case (0x9000, let data):
             NSLog("TokenSession sign success: \(data as NSData)")
             let der: Data
