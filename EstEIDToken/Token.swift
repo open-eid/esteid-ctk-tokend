@@ -102,6 +102,19 @@ extension TKSmartCard {
     }
 }
 
+// Document number is used as token instance ID: an uppercase letter, an uppercase letter or digit, and seven digits
+// https://www.politsei.ee/et/dokumentide-numbrid lists letter prefixes, diplomatic ID uses a digit (e.g. A19000195)
+// IDEMIA: ID1 Developer Guide 6.1, 9.1 - file D003, TLV tag 04; 9.2.4 - diplomatic ID example
+// Thales: Estonian eID 2025 Developer Guide 5.3.11.1 - file 5007, PD7 format XX9999999
+private func documentNumber(from data: Data) throws -> String {
+    guard data.count == 9,
+          let documentNumber = String(bytes: data, encoding: .ascii),
+          documentNumber.range(of: #"^[A-Z][A-Z0-9][0-9]{7}$"#, options: .regularExpression) != nil else {
+        NSLog("EstEIDToken invalid document number, length \(data.count)")
+        throw TKError(.corruptedData)
+    }
+    return documentNumber
+}
 
 class Token<T : TokenSession> : TKSmartCardToken, TKTokenDelegate {
     func createSession(_ token: TKToken) throws -> TKTokenSession {
@@ -153,10 +166,10 @@ class IdemiaToken : Token<IdemiaTokenSession> {
         NSLog("IdemiaToken initWithSmartCard AID \(AID! as NSData)")
         do {
             let data = try smartCard.readFile(file: 0xD003)
-            guard let tlv = TLV(from: data) else {
+            guard let tlv = TLV(from: data), tlv.tag == 0x04 else {
                 throw TKError(.corruptedData)
             }
-            let instanceID = String(decoding: tlv.value, as: UTF8.self)
+            let instanceID = try documentNumber(from: tlv.value)
             NSLog("IdemiaToken initWithSmartCard \(instanceID)")
             _ = try smartCard.selectFile(p1: 0x01, file: 0xADF1)
             try super.init(smartCard: smartCard, aid: AID, instanceID: instanceID, tokenDriver: tokenDriver, certificateID: 0x3401, keyID: 0x81)
@@ -173,7 +186,7 @@ class ThalesToken : Token<ThalesTokenSession> {
         do {
             _ = try smartCard.selectFile(p1: 0x08, file: 0xDFDD)
             let data = try smartCard.readFile(file: 0x5007)
-            let instanceID = String(decoding: data, as: UTF8.self)
+            let instanceID = try documentNumber(from: data)
             NSLog("ThalesToken initWithSmartCard \(instanceID)")
             _ = try smartCard.selectFile(p1: 0x08, file: 0xADF1)
             try super.init(smartCard: smartCard, aid: AID, instanceID: instanceID, tokenDriver: tokenDriver, certificateID: 0x3411, keyID: 0x01)
