@@ -283,7 +283,7 @@ class IdemiaTokenSession : TokenSession {
         if let pinInfo = TLV(from: data), pinInfo.tag == 0x70 ,
             let capsule = TLV(from: pinInfo.value), capsule.tag == 0xBF8101,
             let info = TLV(from: capsule.value), info.tag == 0xA0 {
-            for tlv in TLV.sequenceOfRecords(from: info.value) ?? [] where tlv.tag == 0x9B {
+            for tlv in TLV.sequenceOfRecords(from: info.value) ?? [] where tlv.tag == 0x9B && !tlv.value.isEmpty {
                 return tlv.value[0]
             }
         }
@@ -328,7 +328,7 @@ class ThalesTokenSession : TokenSession {
                                       tlv: TLV(tag: 0xA0, tlv: TLV(tag: 0x83, bytes: [0x81])), le: 0)
         if let pinInfo = TLV(from: data), pinInfo.tag == 0xA0 {
             NSLog("ThalesTokenSession triesLeft \(pinInfo.value as NSData)")
-            for tlv in TLV.sequenceOfRecords(from: pinInfo.value) ?? [] where tlv.tag == 0xDF21 {
+            for tlv in TLV.sequenceOfRecords(from: pinInfo.value) ?? [] where tlv.tag == 0xDF21 && !tlv.value.isEmpty {
                 return tlv.value[0]
             }
         }
