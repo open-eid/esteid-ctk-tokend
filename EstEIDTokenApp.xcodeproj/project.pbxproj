@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -45,14 +45,12 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		2F3883C31CF46C9D00F114A7 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 13;
+			dstSubfolder = PlugIns;
 			files = (
 				2F3883BF1CF46C9D00F114A7 /* EstEIDToken.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -64,7 +62,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		4E42366E306A7F640025B2DA /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		4E42366E306A7F640025B2DA /* Exceptions for "EstEIDToken" folder in "EstEIDToken" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -74,8 +72,19 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4E423669306A7F630025B2DA /* EstEIDToken */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (4E42366E306A7F640025B2DA /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = EstEIDToken; sourceTree = "<group>"; };
-		4E423674306A7F970025B2DA /* EstEIDTokenApp */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = EstEIDTokenApp; sourceTree = "<group>"; };
+		4E423669306A7F630025B2DA /* EstEIDToken */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4E42366E306A7F640025B2DA /* Exceptions for "EstEIDToken" folder in "EstEIDToken" target */,
+			);
+			path = EstEIDToken;
+			sourceTree = "<group>";
+		};
+		4E423674306A7F970025B2DA /* EstEIDTokenApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EstEIDTokenApp;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXGroup section */
@@ -132,8 +141,6 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
-			);
 			fileSystemSynchronizedGroups = (
 				4E423669306A7F630025B2DA /* EstEIDToken */,
 			);
@@ -150,7 +157,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 2640;
+				LastUpgradeCheck = 2700;
 				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					2F3883971CF46C6E00F114A7 = {
@@ -167,7 +174,6 @@
 				};
 			};
 			buildConfigurationList = 2F3883931CF46C6E00F114A7 /* Build configuration list for PBXProject "EstEIDTokenApp" */;
-			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -176,6 +182,7 @@
 				et,
 			);
 			mainGroup = 2F38838F1CF46C6E00F114A7;
+			preferredProjectObjectVersion = 90;
 			productRefGroup = 2F3883991CF46C6E00F114A7 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -190,34 +197,29 @@
 /* Begin PBXResourcesBuildPhase section */
 		2F3883961CF46C6E00F114A7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		2F3883AE1CF46C9D00F114A7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		4E5814FF20225FA6008493DC /* Build package */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 8;
-			files = (
-			);
-			inputPaths = (
-			);
 			name = "Build package";
-			outputPaths = (
-			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${CODE_SIGNING_REQUIRED}\" != \"NO\" ]; then\n  SIGN=(--sign \"${DEVELOPMENT_TEAM}\")\nfi\npkgbuild --root ${DSTROOT} --install-location / --identifier ee.ria.esteid-ctk-tokend --version ${MARKETING_VERSION}.${CURRENT_PROJECT_VERSION} \"${SIGN[@]}\" esteid-ctk-tokend_${MARKETING_VERSION}.${CURRENT_PROJECT_VERSION}.pkg\n";
+			shellScript = (
+				"if [ \"${CODE_SIGNING_REQUIRED}\" != \"NO\" ]; then",
+				"  SIGN=(--sign \"${DEVELOPMENT_TEAM}\")",
+				"fi",
+				"pkgbuild --root ${DSTROOT} --install-location / --identifier ee.ria.esteid-ctk-tokend --version ${MARKETING_VERSION}.${CURRENT_PROJECT_VERSION} \"${SIGN[@]}\" esteid-ctk-tokend_${MARKETING_VERSION}.${CURRENT_PROJECT_VERSION}.pkg",
+				"",
+			);
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -225,17 +227,13 @@
 /* Begin PBXSourcesBuildPhase section */
 		2F3883941CF46C6E00F114A7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		2F3883AC1CF46C9D00F114A7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -253,22 +251,19 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		2F3883A71CF46C6F00F114A7 /* Debug */ = {
+		2F3883A71CF46C6F00F114A7 /* Debug configuration for PBXProject "EstEIDTokenApp" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
@@ -277,7 +272,6 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
@@ -320,22 +314,19 @@
 			};
 			name = Debug;
 		};
-		2F3883A81CF46C6F00F114A7 /* Release */ = {
+		2F3883A81CF46C6F00F114A7 /* Release configuration for PBXProject "EstEIDTokenApp" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
@@ -344,7 +335,6 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
@@ -382,7 +372,7 @@
 			};
 			name = Release;
 		};
-		2F3883AA1CF46C6F00F114A7 /* Debug */ = {
+		2F3883AA1CF46C6F00F114A7 /* Debug configuration for PBXNativeTarget "EstEIDTokenApp" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -390,16 +380,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INSTALL_PATH = "$(LOCAL_APPS_DIR)/Utilities";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
-		2F3883AB1CF46C6F00F114A7 /* Release */ = {
+		2F3883AB1CF46C6F00F114A7 /* Release configuration for PBXNativeTarget "EstEIDTokenApp" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -407,52 +393,38 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INSTALL_PATH = "$(LOCAL_APPS_DIR)/Utilities";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
-		2F3883C11CF46C9D00F114A7 /* Debug */ = {
+		2F3883C11CF46C9D00F114A7 /* Debug configuration for PBXNativeTarget "EstEIDToken" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EstEIDToken/EstEIDToken.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EstEIDToken/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp.EstEIDToken;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
-		2F3883C21CF46C9D00F114A7 /* Release */ = {
+		2F3883C21CF46C9D00F114A7 /* Release configuration for PBXNativeTarget "EstEIDToken" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EstEIDToken/EstEIDToken.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EstEIDToken/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = ee.ria.EstEIDTokenApp.EstEIDToken;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
-		4E5814FB20225F53008493DC /* Debug */ = {
+		4E5814FB20225F53008493DC /* Debug configuration for PBXAggregateTarget "package" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -460,7 +432,7 @@
 			};
 			name = Debug;
 		};
-		4E5814FC20225F53008493DC /* Release */ = {
+		4E5814FC20225F53008493DC /* Release configuration for PBXAggregateTarget "package" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -474,37 +446,33 @@
 		2F3883931CF46C6E00F114A7 /* Build configuration list for PBXProject "EstEIDTokenApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2F3883A71CF46C6F00F114A7 /* Debug */,
-				2F3883A81CF46C6F00F114A7 /* Release */,
+				2F3883A71CF46C6F00F114A7 /* Debug configuration for PBXProject "EstEIDTokenApp" */,
+				2F3883A81CF46C6F00F114A7 /* Release configuration for PBXProject "EstEIDTokenApp" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		2F3883A91CF46C6F00F114A7 /* Build configuration list for PBXNativeTarget "EstEIDTokenApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2F3883AA1CF46C6F00F114A7 /* Debug */,
-				2F3883AB1CF46C6F00F114A7 /* Release */,
+				2F3883AA1CF46C6F00F114A7 /* Debug configuration for PBXNativeTarget "EstEIDTokenApp" */,
+				2F3883AB1CF46C6F00F114A7 /* Release configuration for PBXNativeTarget "EstEIDTokenApp" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		2F3883C01CF46C9D00F114A7 /* Build configuration list for PBXNativeTarget "EstEIDToken" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2F3883C11CF46C9D00F114A7 /* Debug */,
-				2F3883C21CF46C9D00F114A7 /* Release */,
+				2F3883C11CF46C9D00F114A7 /* Debug configuration for PBXNativeTarget "EstEIDToken" */,
+				2F3883C21CF46C9D00F114A7 /* Release configuration for PBXNativeTarget "EstEIDToken" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		4E5814FA20225F53008493DC /* Build configuration list for PBXAggregateTarget "package" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4E5814FB20225F53008493DC /* Debug */,
-				4E5814FC20225F53008493DC /* Release */,
+				4E5814FB20225F53008493DC /* Debug configuration for PBXAggregateTarget "package" */,
+				4E5814FC20225F53008493DC /* Release configuration for PBXAggregateTarget "package" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
