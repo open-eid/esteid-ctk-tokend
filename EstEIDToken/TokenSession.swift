@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: Estonian Information System Authority
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+import CryptoKit
 import CryptoTokenKit
 
 class AuthOperation: TKTokenSmartCardPINAuthOperation {
@@ -184,6 +185,17 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
         return TKTokenAuthOperation()
     }
 
+    #if hasAttribute(diagnose)
+    @diagnose(DeprecatedDeclaration, as: ignored)
+    #endif
+    private func isRFC4754(_ algorithm: TKTokenKeyAlgorithm) -> Bool {
+        algorithm.isAlgorithm(.ecdsaSignatureRFC4754) ||
+        algorithm.isAlgorithm(.ecdsaSignatureDigestRFC4754) ||
+        algorithm.isAlgorithm(.ecdsaSignatureDigestRFC4754SHA256) ||
+        algorithm.isAlgorithm(.ecdsaSignatureDigestRFC4754SHA384) ||
+        algorithm.isAlgorithm(.ecdsaSignatureDigestRFC4754SHA512)
+    }
+
     func tokenSession(_ session: TKTokenSession, supports operation: TKTokenOperation, keyObjectID: TKToken.ObjectID, algorithm: TKTokenKeyAlgorithm) -> Bool {
         NSLog("TokenSession supports \(operation) keyID \(keyObjectID)")
         guard let keyItem = try? token.keychainContents?.key(forObjectID: keyObjectID) else {
@@ -191,7 +203,7 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
             return false
         }
         return operation == .signData && keyItem.canSign && (
-            algorithm.isAlgorithm(.ecdsaSignatureRFC4754) ||
+            isRFC4754(algorithm) ||
             algorithm.isAlgorithm(.ecdsaSignatureDigestX962) ||
             algorithm.isAlgorithm(.ecdsaSignatureDigestX962SHA256) ||
             algorithm.isAlgorithm(.ecdsaSignatureDigestX962SHA384) ||
@@ -201,23 +213,31 @@ class TokenSession: TKSmartCardTokenSession, TKTokenSessionDelegate {
 
     func tokenSession(_ session: TKTokenSession, sign dataToSign: Data, keyObjectID: TKToken.ObjectID, algorithm: TKTokenKeyAlgorithm) throws -> Data {
         NSLog("TokenSession sign \(keyObjectID) \(dataToSign)")
-        guard ((try? token.keychainContents?.key(forObjectID: keyObjectID)) != nil) else {
+        guard let keyItem = try? token.keychainContents?.key(forObjectID: keyObjectID) else {
             throw TKError(.tokenNotFound)
         }
         defer { closeSession() }
         switch try signData(keyId: keyObjectID as! UInt8, sign: dataToSign) {
-        case (0x9000, var data):
+        case (0x9000, let data):
             NSLog("TokenSession sign success: \(data as NSData)")
-            if algorithm.isAlgorithm(.ecdsaSignatureRFC4754) {
+            let der: Data
+            do {
+                switch keyItem.keySizeInBits {
+                case 256: der = try P256.Signing.ECDSASignature(rawRepresentation: data).derRepresentation
+                case 384: der = try P384.Signing.ECDSASignature(rawRepresentation: data).derRepresentation
+                case 521: der = try P521.Signing.ECDSASignature(rawRepresentation: data).derRepresentation
+                default: throw TKError(.corruptedData)
+                }
+            } catch {
+                NSLog("TokenSession sign invalid signature length \(data.count) for key size \(keyItem.keySizeInBits)")
+                throw TKError(.corruptedData)
+            }
+            if isRFC4754(algorithm) {
                 NSLog("TokenSession sign raw")
                 return data
             }
-            let halfLength = data.count / 2
-            let r = TLV(tag: 0x02, bigInt: data.prefix(halfLength))
-            let s = TLV(tag: 0x02, bigInt: data.suffix(halfLength))
-            data = TLV(tag: 0x30, records: [r, s]).data
-            NSLog("TokenSession sign encoded: \(data as NSData)")
-            return data
+            NSLog("TokenSession sign encoded: \(der as NSData)")
+            return der
         case (0x6982, _):
             NSLog("TokenSession sign needs auth")
             throw TKError(.authenticationNeeded)

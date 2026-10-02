@@ -14,14 +14,6 @@ extension TLV {
     convenience init(tag: UInt64, tlv: TLV) {
         self.init(tag: tag, value: tlv.data)
     }
-    convenience init(tag: UInt64, bigInt: Data) {
-        if let firstByte = bigInt.first,
-           firstByte > 0x80 {
-            self.init(tag: tag, value: [0x00] + bigInt)
-        } else {
-            self.init(tag: tag, value: bigInt)
-        }
-    }
 }
 
 extension TKTokenKeychainItem {
