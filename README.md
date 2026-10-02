@@ -35,16 +35,18 @@
 
  6. Debug
 
-        Open Console.app and filter EstEID logs
+        Open Console.app and filter EstEID logs (messages are <private> unless private data logging is enabled)
         Load extension
         pluginkit -a EstEIDTokenApp.app/Contents/PlugIns/EstEIDToken.appex
         Unload extension
         pluginkit -r EstEIDTokenApp.app/Contents/PlugIns/EstEIDToken.appex
+        List registered copies of the extension
+        pluginkit -m -A -v -i ee.ria.EstEIDTokenApp.EstEIDToken
         List cards
-        security list-smartcard
+        security list-smartcards
         List card parameters
         security export-smartcard
-        Kill daemon
+        Kill daemon (leaves ctkd with a stale connection, re-insert the card afterwards)
         ps aux |grep EstEIDToken.appex
         kill -9 PID
 
