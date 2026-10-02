@@ -59,26 +59,40 @@ extension TKSmartCard {
     }
 
     func readFile(file: UInt16, le: Int = 0) throws -> Data {
-        guard let fci = TLV(from: try selectFile(p1: 0x02, p2: 0x04, file: file, le: 0)) else {
+        guard let fci = TLV(from: try selectFile(p1: 0x02, p2: 0x04, file: file, le: 0)),
+              let records = TLV.sequenceOfRecords(from: fci.value) else {
             NSLog("EstEIDToken readBinary failed to parse FCI record")
             throw TKError(.corruptedData)
         }
 
-        var size: UInt16 = 0
-        for tlv in TLV.sequenceOfRecords(from: fci.value)! where tlv.tag == 0x80 || tlv.tag == 0x81 {
-            size = UInt16(tlv.value[0]) << 8 | UInt16(tlv.value[1])
+        var size = 0
+        for tlv in records where (tlv.tag == 0x80 || tlv.tag == 0x81) && (1...2).contains(tlv.value.count) {
+            size = tlv.value.reduce(0) { $0 << 8 | Int($1) }
         }
 
-        if size == 0 {
-            NSLog("EstEIDToken readBinary failed to missing size in FCI record")
+        // READ BINARY offset is 15 bits, P1 bit 8 selects a short EF identifier
+        if size == 0 || size > 0x7FFF {
+            NSLog("EstEIDToken readBinary failed to missing or invalid size \(size) in FCI record")
             throw TKError(.corruptedData)
         }
 
         var data = Data()
-        data.reserveCapacity(Int(size))
+        data.reserveCapacity(size)
         do {
-            while data.count < size {
-                data.append(try sendCheck(ins: 0xB0, p1: UInt8(data.count >> 8), p2: UInt8(truncatingIfNeeded: data.count), le: min(le, Int(size) - data.count)))
+            // At most 256 READ BINARY commands: enough for 0x7FFF bytes even at 128-byte responses
+            // (OpenSC uses 233, or 192 for 2018 v2)
+            for _ in 0..<256 where data.count < size {
+                let remaining = size - data.count
+                let chunk = try sendCheck(ins: 0xB0, p1: UInt8(data.count >> 8), p2: UInt8(truncatingIfNeeded: data.count), le: min(le, remaining))
+                guard !chunk.isEmpty, chunk.count <= remaining else {
+                    NSLog("EstEIDToken readBinary invalid response length \(chunk.count) remaining \(remaining)")
+                    throw TKError(.corruptedData)
+                }
+                data.append(chunk)
+            }
+            guard data.count == size else {
+                NSLog("EstEIDToken readBinary exceeded chunk limit at pos \(data.count)")
+                throw TKError(.corruptedData)
             }
             return data
         } catch {
