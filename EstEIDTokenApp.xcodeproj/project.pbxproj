@@ -229,13 +229,16 @@
 			files = (
 			);
 			inputPaths = (
+				"$(DSTROOT)",
 			);
 			name = "Build package";
 			outputPaths = (
+				"$(SRCROOT)/esteid-ctk-tokend_$(MARKETING_VERSION).$(CURRENT_PROJECT_VERSION).pkg",
+				"$(SRCROOT)/esteid-ctk-tokend_$(MARKETING_VERSION).$(CURRENT_PROJECT_VERSION).spdx.json",
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${CODE_SIGNING_REQUIRED}\" != \"NO\" ]; then\n  SIGN=(--sign \"${DEVELOPMENT_TEAM}\")\nfi\npkgbuild --root ${DSTROOT} --install-location / --identifier ee.ria.esteid-ctk-tokend --version ${MARKETING_VERSION}.${CURRENT_PROJECT_VERSION} \"${SIGN[@]}\" esteid-ctk-tokend_${MARKETING_VERSION}.${CURRENT_PROJECT_VERSION}.pkg\n";
+			shellScript = "if [ \"${CODE_SIGNING_REQUIRED}\" != \"NO\" ]; then\n  SIGN=(--sign \"${DEVELOPMENT_TEAM}\")\nfi\npkgbuild --root ${DSTROOT} --install-location / --identifier ee.ria.esteid-ctk-tokend --version ${MARKETING_VERSION}.${CURRENT_PROJECT_VERSION} \"${SIGN[@]}\" \"${SRCROOT}/esteid-ctk-tokend_${MARKETING_VERSION}.${CURRENT_PROJECT_VERSION}.pkg\"\npython3 << 'PYEOF'\nimport json, uuid, datetime, os\nv = os.environ['MARKETING_VERSION']\nb = os.environ['CURRENT_PROJECT_VERSION']\nt = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')\nu = str(uuid.uuid4())\nmeta = {'versionInfo': v, 'supplier': 'Organization: ria.ee', 'downloadLocation': 'https://github.com/open-eid/esteid-ctk-tokend/releases', 'filesAnalyzed': False, 'licenseConcluded': 'LGPL-2.1-or-later', 'licenseDeclared': 'LGPL-2.1-or-later', 'copyrightText': os.environ['INFOPLIST_KEY_NSHumanReadableCopyright']}\npkgs = [\n  dict(name='esteid-ctk-tokend', SPDXID='SPDXRef-Package-esteid-ctk-tokend', primaryPackagePurpose='INSTALL',      **meta),\n  dict(name='EstEIDTokenApp',    SPDXID='SPDXRef-Package-EstEIDTokenApp',    primaryPackagePurpose='APPLICATION',   **meta),\n  dict(name='EstEIDToken',       SPDXID='SPDXRef-Package-EstEIDToken',       primaryPackagePurpose='LIBRARY',       **meta),\n]\nrels = [\n  {'spdxElementId': 'SPDXRef-DOCUMENT',                 'relatedSpdxElement': 'SPDXRef-Package-esteid-ctk-tokend', 'relationshipType': 'DESCRIBES'},\n  {'spdxElementId': 'SPDXRef-Package-esteid-ctk-tokend','relatedSpdxElement': 'SPDXRef-Package-EstEIDTokenApp',    'relationshipType': 'CONTAINS'},\n  {'spdxElementId': 'SPDXRef-Package-EstEIDTokenApp',   'relatedSpdxElement': 'SPDXRef-Package-EstEIDToken',       'relationshipType': 'CONTAINS'},\n]\nd = {'spdxVersion': 'SPDX-2.3', 'dataLicense': 'CC0-1.0', 'SPDXID': 'SPDXRef-DOCUMENT', 'name': 'esteid-ctk-tokend', 'documentNamespace': 'https://github.com/open-eid/esteid-ctk-tokend/sbom-' + u, 'creationInfo': {'licenseListVersion': '3.28', 'creators': ['Organization: ria.ee', 'Tool: pkgbuild'], 'created': t}, 'packages': pkgs, 'relationships': rels}\nopen(os.path.join(os.environ['SRCROOT'], f'esteid-ctk-tokend_{v}.{b}.spdx.json'), 'w').write(json.dumps(d, indent=4))\nPYEOF\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -282,7 +285,6 @@
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -318,7 +320,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -331,8 +332,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright (C) 2017 - 2026 Estonian Information System Authority";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.7.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -352,7 +354,6 @@
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -390,7 +391,6 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -398,8 +398,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright (C) 2017 - 2026 Estonian Information System Authority";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.7.0;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
