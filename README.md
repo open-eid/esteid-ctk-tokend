@@ -49,9 +49,11 @@
         kill -9 PID
 
 ## References
-* Apple example code https://developer.apple.com/library/content/samplecode/PIVToken/Introduction/Intro.html
-* Belgium implementation https://github.com/Fedict/eid-mw/tree/master/cardcomm/ctkToken
-* OpenSC implementation https://github.com/frankmorgner/OpenSCToken
+* [ID-card technical documentation](https://www.id.ee/artikkel/id-kaardi-dokumentatsioon/)
+* [Apple CryptoTokenKit smart card extension guide](https://developer.apple.com/documentation/cryptotokenkit/authenticating-users-with-a-cryptographic-token)
+* [Apple example code](https://developer.apple.com/library/archive/samplecode/PIVToken/Introduction/Intro.html)
+* [Belgium implementation](https://github.com/Fedict/eid-mw/tree/master/cardcomm/ctkToken)
+* [OpenSC implementation](https://github.com/frankmorgner/OpenSCToken)
 
 ## Support
 Official builds are provided through official distribution point [id.ee](https://www.id.ee/en/article/install-id-software/). If you want support, you need to be using official builds. Contact our support via www.id.ee for assistance.
