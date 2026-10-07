@@ -17,6 +17,3 @@ jobs:
       with:
         name: pkg
         path: ./*.pkg
-  copyright:
-    name: Check copyright headers
-    uses: open-eid/.github/.github/workflows/copyright.yml@b2d87c7447ebcc01beb54c84f3978a81c1d64877 # master
